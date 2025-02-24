@@ -17,7 +17,7 @@ import * as FileSystem from "expo-file-system";
 import type { LocationObject } from "expo-location";
 import * as Location from "expo-location";
 import location from "./location";
-
+import axios from "axios";
 const CameraScreen = () => {
   const [permission, requestPermission] = useCameraPermissions();
   const [location, setLocation] = useState<LocationObject | null>(null);
@@ -43,6 +43,35 @@ const CameraScreen = () => {
       setIsLoadingLocation(false);
     })();
   }, []);
+
+  const UploadImage = async (picture: string) => {
+    const formData = new FormData();
+    // Create the correct file object for FormData
+    formData.append("file", {
+      uri: picture,
+      type: "image/jpeg",
+      name: "photo.jpg",
+    } as any);
+
+    try {
+      // Use your device's IP address instead of localhost
+      const response = await axios.post(
+        "http://192.168.1.5:8080/api/v1/upload", // Replace X with your actual IP
+        formData,
+        {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      console.log("Upload successful:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Upload error:", error);
+      throw error;
+    }
+  };
   const toggleCameraFacing = () => {
     setFacing((current) => (current === "back" ? "front" : "back"));
   };
@@ -66,6 +95,7 @@ const CameraScreen = () => {
     }
     try {
       const fileName = path.parse(uri).base;
+      await UploadImage(uri);
       await FileSystem.copyAsync({
         from: uri,
         to: FileSystem.documentDirectory + fileName,
@@ -79,7 +109,7 @@ const CameraScreen = () => {
           timestamp: location.timestamp,
         };
         await FileSystem.writeAsStringAsync(
-          FileSystem.documentDirectory + fileName + '.location.json',
+          FileSystem.documentDirectory + fileName + ".location.json",
           JSON.stringify(locationData)
         );
       }
