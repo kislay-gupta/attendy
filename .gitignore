@@ -46,7 +46,7 @@ jspm_packages/
 
 # Parcel-bundler cache (if applicable)
 .cache/
-
+public/*
 # VSCode settings
 .vscode/
 
