@@ -6,6 +6,8 @@ import {
   Pressable,
   Image,
   Button,
+  Alert,
+  BackHandler, // Add this
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { router } from "expo-router";
@@ -16,20 +18,92 @@ import path from "path";
 import * as FileSystem from "expo-file-system";
 import type { LocationObject } from "expo-location";
 import * as Location from "expo-location";
-import location from "./location";
 import axios from "axios";
 const CameraScreen = () => {
   const [permission, requestPermission] = useCameraPermissions();
   const [location, setLocation] = useState<LocationObject | null>(null);
+  const [loading, setLoading] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
+  const [locationPermission, setLocationPermission] = useState(false);
   const [facing, setFacing] = useState<CameraType>("back");
   const [picture, setPicture] = useState<string | undefined>();
   const camera = useRef<CameraView>(null);
+  const checkPermissions = async () => {
+    setIsLoadingLocation(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Location Required",
+          "This app requires location access. Please enable location services to continue.",
+          [
+            {
+              text: "Request Again",
+              onPress: checkPermissions,
+            },
+            {
+              text: "Exit App",
+              onPress: () => BackHandler.exitApp(),
+              style: "cancel",
+            },
+          ]
+        );
+        setLocationPermission(false);
+        return;
+      }
+
+      setLocationPermission(true);
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Highest,
+      }).catch((error) => {
+        console.error("Error getting location:", error);
+        Alert.alert(
+          "Location Error",
+          "Unable to get your location. Would you like to try again?",
+          [
+            {
+              text: "Retry",
+              onPress: checkPermissions,
+            },
+            {
+              text: "Cancel",
+              style: "cancel",
+            },
+          ]
+        );
+        return null;
+      });
+
+      if (location) {
+        setLocation(location);
+      }
+    } catch (error) {
+      console.error("Error getting location:", error);
+      Alert.alert(
+        "Location Error",
+        "Unable to get your location. Would you like to try again?",
+        [
+          {
+            text: "Retry",
+            onPress: checkPermissions,
+          },
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+        ]
+      );
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
   useEffect(() => {
     if (permission && !permission.granted && permission.canAskAgain) {
       requestPermission();
     }
+    checkPermissions();
   }, [permission]);
+  // Remove the second useEffect that was fetching location
   useEffect(() => {
     (async () => {
       setIsLoadingLocation(true);
@@ -55,6 +129,7 @@ const CameraScreen = () => {
 
     try {
       // Use your device's IP address instead of localhost
+      setLoading(true);
       const response = await axios.post(
         "http://192.168.1.5:8080/api/v1/upload", // Replace X with your actual IP
         formData,
@@ -70,6 +145,8 @@ const CameraScreen = () => {
     } catch (error) {
       console.error("Upload error:", error);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
   const toggleCameraFacing = () => {
@@ -121,11 +198,20 @@ const CameraScreen = () => {
     }
   };
   console.log(location);
+
   if (isLoadingLocation) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0066cc" />
         <Text style={styles.loadingText}>Getting location...</Text>
+      </View>
+    );
+  }
+  if (!locationPermission) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0066cc" />
+        <Text style={styles.loadingText}>Location permission is required</Text>
       </View>
     );
   }
@@ -153,8 +239,40 @@ const CameraScreen = () => {
         </View>
 
         <View style={{ padding: 10 }}>
-          <SafeAreaView edges={["bottom"]}>
-            <Button title="Save" onPress={() => saveFile(picture)} />
+          <SafeAreaView
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              padding: 10,
+              gap: 10,
+            }}
+            edges={["bottom"]}
+          >
+            <View style={[styles.saveButton, { flex: 1 }]}>
+              {!loading && (
+                <Pressable 
+                  style={styles.buttonContainer} 
+                  onPress={() => setPicture(undefined)}
+                >
+                  <Text style={[styles.buttonText, { color: '#FF4444' }]}>Retake</Text>
+                </Pressable>
+              )}
+            </View>
+            <View style={[styles.saveButton, { flex: 1 }]}>
+              {loading ? (
+                <View style={styles.loadingButton}>
+                  <ActivityIndicator color="white" size="small" />
+                  <Text style={styles.loadingButtonText}>Uploading...</Text>
+                </View>
+              ) : (
+                <Pressable 
+                  style={[styles.buttonContainer, { backgroundColor: '#2196F3' }]} 
+                  onPress={() => saveFile(picture)}
+                >
+                  <Text style={styles.buttonText}>Upload</Text>
+                </Pressable>
+              )}
+            </View>
           </SafeAreaView>
         </View>
         <MaterialIcons
@@ -268,5 +386,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     fontWeight: "500",
+  },
+  loadingButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#2196F3",
+    padding: 10,
+    borderRadius: 5,
+    gap: 10,
+  },
+  loadingButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  saveButton: {
+    minHeight: 40,
+    justifyContent: "center",
+  },
+  buttonContainer: {
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
   },
 });

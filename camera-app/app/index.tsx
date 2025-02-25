@@ -4,6 +4,8 @@ import { Link, useFocusEffect } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as FileSystem from "expo-file-system";
 import { getMediaType, MediaType } from "../utils/media";
+import * as Network from "expo-network";
+
 type Media = {
   name: string;
   uri: string;
@@ -11,9 +13,18 @@ type Media = {
 };
 const HomeScreen = () => {
   const [image, setImage] = useState<Media[]>([]);
+  async function fetchDeviceIp() {
+    try {
+      const ipAddress = await Network.getIpAddressAsync();
+      console.log("Device  :", ipAddress);
+    } catch (error) {
+      console.error("Error fetching IP address:", error);
+    }
+  }
   useFocusEffect(
     useCallback(() => {
       loadFiles();
+      fetchDeviceIp();
     }, [])
   );
   const loadFiles = async () => {
@@ -59,7 +70,6 @@ const HomeScreen = () => {
           <MaterialIcons name="photo-camera" size={30} color="white" />
         </Pressable>
       </Link>
-     
     </View>
   );
 };

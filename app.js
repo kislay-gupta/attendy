@@ -12,13 +12,21 @@ app.use(
     credentials: true,
   })
 );
+// middlewares
+
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
+
 app.get("/", (req, res) => {
   res.send("API is working");
 });
-app.post("/api/v1/upload", upload.single("file"), uploadPhoto);
+
+// routes
+
+import photoRoutes from "./routes/photos.routes.js";
+
+app.use("/api/v1/upload", photoRoutes);
 
 export { app };
