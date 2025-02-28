@@ -24,18 +24,6 @@ const photoSchema = new Schema(
       ref: "User",
       required: true,
     },
-    status: {
-      type: String,
-      enum: ["pending", "approved", "rejected"],
-      default: "pending"
-    },
-    deviceInfo: {
-      type: {
-        deviceModel: String,
-        osVersion: String,
-      },
-      required: false
-    }
   },
   { timestamps: true }
 );

@@ -2,8 +2,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 const uploadPhoto = asyncHandler(async (req, res) => {
+  const { latitude, longitude } = req.body;
   try {
     const userFile = req.file;
+
     console.log(userFile);
     res
       .status(200)

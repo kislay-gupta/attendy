@@ -6,7 +6,6 @@ const userSchema = new Schema(
   {
     username: {
       type: String,
-      required: true,
       unique: true,
       trim: true,
       lowercase: true,
@@ -40,6 +39,13 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
+    deviceInfo: {
+      type: {
+        deviceManufacture: String,
+        deviceModel: String,
+      },
+      required: true,
+    },
     refreshToken: {
       type: String,
     },
@@ -66,6 +72,7 @@ userSchema.methods.generateAccessToken = function () {
       email: this.email,
       username: this.username,
       fullname: this.fullname,
+      deviceInfo: this.deviceInfo,
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
@@ -86,4 +93,4 @@ userSchema.methods.generateRefreshToken = function () {
   );
 };
 
-export default User = mongoose.model("User", userSchema);
+export const User = mongoose.model("User", userSchema);

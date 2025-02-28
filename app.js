@@ -26,7 +26,7 @@ app.get("/", (req, res) => {
 // routes
 
 import photoRoutes from "./routes/photos.routes.js";
-
+import userRoutes from "./routes/users.routes.js";
 app.use("/api/v1/upload", photoRoutes);
-
+app.use("/api/v1/user", userRoutes);
 export { app };

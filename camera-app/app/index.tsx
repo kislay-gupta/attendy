@@ -1,10 +1,18 @@
-import { View, Pressable, StyleSheet, FlatList, Image } from "react-native";
+import {
+  View,
+  Pressable,
+  StyleSheet,
+  FlatList,
+  Image,
+  Text,
+} from "react-native";
 import React, { useCallback, useState } from "react";
 import { Link, useFocusEffect } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as FileSystem from "expo-file-system";
 import { getMediaType, MediaType } from "../utils/media";
 import * as Network from "expo-network";
+import * as Device from "expo-device";
 
 type Media = {
   name: string;
@@ -34,7 +42,9 @@ const HomeScreen = () => {
     const res = await FileSystem.readDirectoryAsync(
       FileSystem.documentDirectory
     );
+    const x = await Device.getDeviceTypeAsync();
 
+    console.log(x);
     setImage(
       res.map((file) => ({
         name: file,
@@ -45,6 +55,11 @@ const HomeScreen = () => {
   };
   return (
     <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>
+          {Device.manufacturer}: {Device.modelName}
+        </Text>
+      </View>
       <FlatList
         data={image}
         contentContainerStyle={{ gap: 1 }}
