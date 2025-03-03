@@ -19,6 +19,9 @@ import * as FileSystem from "expo-file-system";
 import type { LocationObject } from "expo-location";
 import * as Location from "expo-location";
 import axios from "axios";
+import CustomPicker from "../components/CustomPicker";
+import RNPickerSelect from "react-native-picker-select";
+
 const CameraScreen = () => {
   const [permission, requestPermission] = useCameraPermissions();
   const [location, setLocation] = useState<LocationObject | null>(null);
@@ -28,6 +31,7 @@ const CameraScreen = () => {
   const [facing, setFacing] = useState<CameraType>("back");
   const [picture, setPicture] = useState<string | undefined>();
   const camera = useRef<CameraView>(null);
+
   const checkPermissions = async () => {
     setIsLoadingLocation(true);
     try {
@@ -131,7 +135,7 @@ const CameraScreen = () => {
       // Use your device's IP address instead of localhost
       setLoading(true);
       const response = await axios.post(
-        "http://192.168.1.5:8080/api/v1/upload", // Replace X with your actual IP
+        "http:// 192.168.202.80:8080/api/v1/upload", // Replace X with your actual IP
         formData,
         {
           headers: {
@@ -242,36 +246,70 @@ const CameraScreen = () => {
           <SafeAreaView
             style={{
               display: "flex",
-              flexDirection: "row",
+              flexDirection: "column",
               padding: 10,
               gap: 10,
             }}
             edges={["bottom"]}
           >
-            <View style={[styles.saveButton, { flex: 1 }]}>
-              {!loading && (
-                <Pressable 
-                  style={styles.buttonContainer} 
-                  onPress={() => setPicture(undefined)}
-                >
-                  <Text style={[styles.buttonText, { color: '#FF4444' }]}>Retake</Text>
-                </Pressable>
-              )}
+            <View style={{ width: "100%" }}>
+              <RNPickerSelect
+                onValueChange={(value) => console.log(value)}
+                placeholder={{ label: "Upload Type" }}
+                items={[
+                  { value: "attendance", label: "Attendance" },
+                  { value: "community", label: "Community" },
+                ]}
+                style={{
+                  viewContainer: {
+                    marginTop: 4,
+
+                    marginBottom: 2,
+                    borderWidth: 1,
+                    borderRadius: 5,
+                    borderColor: "gainsboro",
+                  },
+                  inputIOS: {
+                    borderColor: "gainsboro",
+                    borderWidth: 1,
+                    width: "100%",
+                    padding: 10,
+                    borderRadius: 5,
+                  },
+                }}
+              />
             </View>
-            <View style={[styles.saveButton, { flex: 1 }]}>
-              {loading ? (
-                <View style={styles.loadingButton}>
-                  <ActivityIndicator color="white" size="small" />
-                  <Text style={styles.loadingButtonText}>Uploading...</Text>
-                </View>
-              ) : (
-                <Pressable 
-                  style={[styles.buttonContainer, { backgroundColor: '#2196F3' }]} 
-                  onPress={() => saveFile(picture)}
-                >
-                  <Text style={styles.buttonText}>Upload</Text>
-                </Pressable>
-              )}
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <View style={[styles.saveButton, { flex: 1 }]}>
+                {!loading && (
+                  <Pressable
+                    style={styles.buttonContainer}
+                    onPress={() => setPicture(undefined)}
+                  >
+                    <Text style={[styles.buttonText, { color: "#FF4444" }]}>
+                      Retake
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
+              <View style={[styles.saveButton, { flex: 1 }]}>
+                {loading ? (
+                  <View style={styles.loadingButton}>
+                    <ActivityIndicator color="white" size="small" />
+                    <Text style={styles.loadingButtonText}>Uploading...</Text>
+                  </View>
+                ) : (
+                  <Pressable
+                    style={[
+                      styles.buttonContainer,
+                      { backgroundColor: "#2196F3" },
+                    ]}
+                    onPress={() => saveFile(picture)}
+                  >
+                    <Text style={styles.buttonText}>Upload</Text>
+                  </Pressable>
+                )}
+              </View>
             </View>
           </SafeAreaView>
         </View>
@@ -408,15 +446,15 @@ const styles = StyleSheet.create({
   buttonContainer: {
     padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'white',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "white",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
+    fontWeight: "600",
+    color: "white",
   },
 });

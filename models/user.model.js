@@ -35,6 +35,11 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
+    designation: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     password: {
       type: String,
       required: true,
@@ -44,6 +49,20 @@ const userSchema = new Schema(
         deviceManufacture: String,
         deviceModel: String,
       },
+      required: true,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    role: {
+      type: String,
+      enum: ["USER", "ADMIN"],
+      default: "USER",
+    },
+    organization: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization",
       required: true,
     },
     refreshToken: {

@@ -7,6 +7,7 @@ const photoSchema = new Schema(
       type: String,
       required: true,
     },
+
     latitude: {
       type: Number,
       required: true,
@@ -19,7 +20,12 @@ const photoSchema = new Schema(
       type: Date,
       default: Date.now,
     },
-    owner: {
+    photoType: {
+      type: String,
+      enum: ["Punch In", "Punch Out", "Duty"],
+      required: true,
+    },
+    user: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,

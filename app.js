@@ -18,6 +18,7 @@ app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
   res.send("API is working");
@@ -27,6 +28,8 @@ app.get("/", (req, res) => {
 
 import photoRoutes from "./routes/photos.routes.js";
 import userRoutes from "./routes/users.routes.js";
+import orgRoutes from "./routes/organizations.routes.js";
 app.use("/api/v1/upload", photoRoutes);
 app.use("/api/v1/user", userRoutes);
+app.use("/api/v1/org", orgRoutes);
 export { app };
