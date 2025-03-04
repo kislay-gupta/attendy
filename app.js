@@ -1,11 +1,10 @@
 import express from "express";
-import { upload } from "./middlewares/multer.middleware.js";
-import { uploadPhoto } from "./controllers/photos.controllers.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
-
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
@@ -13,6 +12,9 @@ app.use(
   })
 );
 // middlewares
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use("/public", express.static(path.join(__dirname, "public")));
 
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));

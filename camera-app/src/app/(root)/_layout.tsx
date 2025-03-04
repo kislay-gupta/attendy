@@ -1,5 +1,5 @@
 import { View, Platform, Pressable } from "react-native";
-import { Tabs, usePathname } from "expo-router";
+import { Redirect, Tabs, usePathname } from "expo-router";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -8,8 +8,10 @@ import {
   SafeAreaProvider,
 } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function RootLayout() {
+  const { isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
   console.log(insets);
   const pathname = usePathname();
@@ -63,6 +65,15 @@ export default function RootLayout() {
               title: "Home",
               tabBarIcon: ({ color, size }) => (
                 <Ionicons name="home-outline" size={size} color={color} />
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="profile"
+            options={{
+              title: "Profile",
+              tabBarIcon: ({ color, size }) => (
+                <Ionicons name="person-outline" size={size} color={color} />
               ),
             }}
           />

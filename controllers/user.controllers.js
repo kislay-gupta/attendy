@@ -91,7 +91,11 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Something went wrong while registering the user");
   }
 });
-
+const getCurrentUser = asyncHandler(async (req, res) => {
+  return res
+    .status(200)
+    .json(new ApiResponse(200, req.user, "Current user details"));
+});
 const loginUser = asyncHandler(async (req, res) => {
   const { mobileNo, password } = req.body;
   if (!mobileNo || !password) {
@@ -246,6 +250,7 @@ const verifyDevice = asyncHandler(async (req, res) => {
 export {
   registerUser,
   loginUser,
+  getCurrentUser,
   logoutUser,
   refreshAccessToken,
   changeCurrentPassword,

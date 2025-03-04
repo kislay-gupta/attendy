@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { Photo } from "../models/photo.model.js";
-
+import mongoose from "mongoose";
 const uploadPhoto = asyncHandler(async (req, res) => {
   const { latitude, longitude, photoType, timestamp } = req.body;
 
@@ -39,13 +39,29 @@ const uploadPhoto = asyncHandler(async (req, res) => {
 const getUserPhotos = asyncHandler(async (req, res) => {
   const photos = await Photo.find({ user: req.user._id })
     .sort({ timestamp: -1 })
-    .populate("user", "name email");
+    .populate("user", "fullName email");
 
   return res
     .status(200)
     .json(new ApiResponse(200, photos, "Photos retrieved successfully"));
 });
+const getSinglePhoto = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Invalid photo ID");
+  }
+
+  const photo = await Photo.findById(id);
+
+  if (!photo) {
+    throw new ApiError(404, "Photo not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, photo, "Photo retrieved successfully"));
+});
 const getPhotosByType = asyncHandler(async (req, res) => {
   const { type } = req.params;
 
@@ -89,4 +105,10 @@ const getPhotosByDateRange = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, photos, "Photos retrieved successfully"));
 });
 
-export { uploadPhoto, getUserPhotos, getPhotosByType, getPhotosByDateRange };
+export {
+  uploadPhoto,
+  getSinglePhoto,
+  getUserPhotos,
+  getPhotosByType,
+  getPhotosByDateRange,
+};

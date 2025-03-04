@@ -1,68 +1,102 @@
-import { View, Text, Image } from "react-native";
-import React from "react";
-import { Link, router, Stack, useLocalSearchParams } from "expo-router";
-import * as FileSystem from "expo-file-system";
-import { MaterialIcons } from "@expo/vector-icons";
-import { getMediaType } from "../../utils/media";
-import * as MediaLibrary from "expo-media-library";
-const ImageScreen = () => {
-  const { name } = useLocalSearchParams<{ name: string }>();
-  const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
-  const fullUri = (FileSystem.documentDirectory || "") + (name || "");
-  const type = getMediaType(fullUri);
-  const onDelete = async () => {
-    await FileSystem.deleteAsync(fullUri);
-    router.back();
-  };
-  const onSave = async () => {
+import { View, Image, StyleSheet, Text } from "react-native";
+import { Tabs, useFocusEffect, useLocalSearchParams } from "expo-router";
+import axios from "axios";
+import { BASE_URL } from "../../constants";
+import { useCallback, useState } from "react";
+import useLoader from "../../hooks/use-loader";
+import Loader from "../../components/Loader";
+
+interface PhotoData {
+  _id: string;
+  createdAt: string;
+  img: string;
+  latitude: number;
+  longitude: number;
+  photoType: "Punch In" | "Punch Out";
+  timestamp: string;
+  updatedAt: string;
+  user: string;
+}
+
+export default function ImageScreen() {
+  const { name } = useLocalSearchParams();
+  const id = decodeURIComponent(name as string);
+  const [photo, setPhoto] = useState<PhotoData | null>(null);
+  const { startLoading, stopLoading, isLoading } = useLoader();
+  const getSinglePhoto = async () => {
+    startLoading();
     try {
-      if (permissionResponse?.status !== "granted") {
-        await requestPermission();
-      }
-      const asset = await MediaLibrary.createAssetAsync(fullUri);
-      if (asset) {
-        alert("Media saved successfully");
-      } else {
-        alert("Failed to save media");
-      }
+      const res = await axios.get<{ data: PhotoData }>(
+        `${BASE_URL}/api/v1/upload/${id}`
+      );
+      setPhoto(res.data.data);
     } catch (error) {
-      console.log(error, "failed");
+      console.log(error);
+    } finally {
+      stopLoading();
     }
   };
+  const onFocus = useCallback(() => {
+    getSinglePhoto();
+  }, [id]);
+  useFocusEffect(onFocus);
+  if (isLoading) {
+    return <Loader />;
+  }
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Stack.Screen
+    <View style={styles.container}>
+      <Tabs.Screen
         options={{
           title: "Media",
-
-          headerRight: () => (
-            <View style={{ gap: 10, flexDirection: "row" }}>
-              <MaterialIcons
-                onPress={onDelete}
-                name="delete"
-                size={26}
-                color="crimson"
-              />
-              <MaterialIcons
-                onPress={() => {
-                  onSave();
-                }}
-                name="save"
-                size={26}
-                color="dimgray"
-              />
-            </View>
-          ),
         }}
       />
-      {type === "image" && (
+      <View style={styles.imageContainer}>
         <Image
-          source={{ uri: fullUri }}
-          style={{ width: "100%", height: "100%" }}
+          source={{ uri: photo ? `${BASE_URL}/${photo.img}` : "" }}
+          style={styles.image}
+          resizeMode="contain"
         />
-      )}
+        {photo && (
+          <View style={styles.overlay}>
+            <Text style={styles.overlayText}>Type: {photo.photoType}</Text>
+            <Text style={styles.overlayText}>
+              Time: {new Date(photo.timestamp).toLocaleString()}
+            </Text>
+            <Text style={styles.overlayText}>
+              Location: {photo.latitude.toFixed(6)}, {photo.longitude.toFixed(6)}
+            </Text>
+          </View>
+        )}
+      </View>
     </View>
   );
-};
+}
 
-export default ImageScreen;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "black",
+  },
+  imageContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  image: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
+  overlay: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    padding: 15,
+  },
+  overlayText: {
+    color: 'white',
+    fontSize: 14,
+    marginBottom: 5,
+  },
+});

@@ -13,14 +13,21 @@ import * as FileSystem from "expo-file-system";
 import { getMediaType, MediaType } from "../../utils/media";
 import * as Network from "expo-network";
 import * as Device from "expo-device";
-
+import axios from "axios";
+import { BASE_URL } from "../../constants";
+import { useAuth } from "../../hooks/useAuth";
+import useLoader from "../../hooks/use-loader";
+import Loader from "../../components/Loader";
 type Media = {
+  _id: string;
   name: string;
-  uri: string;
+  img: string;
   type: MediaType;
 };
 const HomeScreen = () => {
+  const { token } = useAuth();
   const [image, setImage] = useState<Media[]>([]);
+  const { startLoading, stopLoading, isLoading } = useLoader();
   async function fetchDeviceIp() {
     try {
       const ipAddress = await Network.getIpAddressAsync();
@@ -29,46 +36,54 @@ const HomeScreen = () => {
       console.error("Error fetching IP address:", error);
     }
   }
+  const getUserImage = async () => {
+    startLoading();
+    try {
+      const response = await axios.get(`${BASE_URL}/api/v1/upload`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setImage(response.data.data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      stopLoading();
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
-      loadFiles();
+      // loadFiles();
+      getUserImage();
       fetchDeviceIp();
     }, [])
   );
-  const loadFiles = async () => {
-    if (!FileSystem.documentDirectory) {
-      return null;
-    }
-    const res = await FileSystem.readDirectoryAsync(
-      FileSystem.documentDirectory
-    );
-    const x = await Device.getDeviceTypeAsync();
 
-    console.log(x);
-    setImage(
-      res.map((file) => ({
-        name: file,
-        uri: FileSystem.documentDirectory + file,
-        type: getMediaType(file),
-      }))
-    );
-  };
+  console.log(image);
+  if (isLoading) {
+    return <Loader />;
+  }
   return (
-    <View style={{}}>
+    <View style={{ flex: 1, backgroundColor: "#FAF3E0" }}>
       <FlatList
         data={image}
         contentContainerStyle={{ gap: 1 }}
         columnWrapperStyle={{ gap: 1 }}
         numColumns={3}
         renderItem={({ item }) => (
-          <Link href={`/${item.name}`} asChild>
+          <Link
+            href={{
+              pathname: "/[name]",
+              params: { name: `${item._id}` },
+            }}
+            asChild
+          >
             <Pressable style={{ flex: 1, maxWidth: "33.33%" }}>
-              {item.type === "image" && (
-                <Image
-                  source={{ uri: item.uri }}
-                  style={{ aspectRatio: 3 / 4, borderRadius: 5 }}
-                />
-              )}
+              <Image
+                source={{ uri: `${BASE_URL}/${item.img}` }}
+                style={{ aspectRatio: 3 / 4, borderRadius: 5 }}
+              />
 
               {item.type === null && null}
             </Pressable>
