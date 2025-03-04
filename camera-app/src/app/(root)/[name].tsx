@@ -3,7 +3,7 @@ import React from "react";
 import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import * as FileSystem from "expo-file-system";
 import { MaterialIcons } from "@expo/vector-icons";
-import { getMediaType } from "../utils/media";
+import { getMediaType } from "../../utils/media";
 import * as MediaLibrary from "expo-media-library";
 const ImageScreen = () => {
   const { name } = useLocalSearchParams<{ name: string }>();

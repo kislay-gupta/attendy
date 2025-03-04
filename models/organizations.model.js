@@ -12,10 +12,6 @@ const organizationSchema = new Schema(
     },
     description: {
       type: String,
-      required: true,
-      trim: true,
-      lowercase: true,
-      index: true,
     },
     logo: {
       type: String,
@@ -32,7 +28,6 @@ const organizationSchema = new Schema(
       },
       address: {
         type: String,
-        required: true,
       },
     },
 

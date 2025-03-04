@@ -18,7 +18,7 @@ const photoSchema = new Schema(
     },
     timestamp: {
       type: Date,
-      default: Date.now,
+      required: true,
     },
     photoType: {
       type: String,

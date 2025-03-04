@@ -7,20 +7,28 @@ const registerOrganization = asyncHandler(async (req, res) => {
   const {
     name,
     description,
-    logo,
-    location,
+    latitude,
+    longitude,
+    address,
     workingDays,
     morningAttendanceDeadline,
     eveningAttendanceStartTime,
     holidays,
   } = req.body;
+  const logo = req.file?.path;
 
-  if (!name || !description || !logo || !location || !workingDays) {
+  // Validate required fields
+  if (!name || !description || !logo || !workingDays) {
     throw new ApiError(400, "All required fields must be provided");
   }
 
+  // Ensure workingDays is an array
+  const processedWorkingDays = Array.isArray(workingDays) 
+    ? workingDays 
+    : workingDays.split(',').map(day => day.trim());
+
   // Validate location object
-  if (!location.latitude || !location.longitude || !location.address) {
+  if (!latitude || !longitude) {
     throw new ApiError(
       400,
       "Location must include latitude, longitude, and address"
@@ -36,8 +44,12 @@ const registerOrganization = asyncHandler(async (req, res) => {
     name,
     description,
     logo,
-    location,
-    workingDays,
+    location: {
+      latitude,
+      longitude,
+      address,
+    },
+    workingDays: processedWorkingDays,
     morningAttendanceDeadline: morningAttendanceDeadline || "09:30",
     eveningAttendanceStartTime: eveningAttendanceStartTime || "17:00",
     holidays: holidays || [],

@@ -10,7 +10,7 @@ import {
   BackHandler, // Add this
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
-import { router } from "expo-router";
+import { router, Tabs } from "expo-router";
 import { useCameraPermissions, CameraType, CameraView } from "expo-camera";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,8 +19,8 @@ import * as FileSystem from "expo-file-system";
 import type { LocationObject } from "expo-location";
 import * as Location from "expo-location";
 import axios from "axios";
-import CustomPicker from "../components/CustomPicker";
 import RNPickerSelect from "react-native-picker-select";
+import { BASE_URL } from "../../constants";
 
 const CameraScreen = () => {
   const [permission, requestPermission] = useCameraPermissions();
@@ -30,6 +30,7 @@ const CameraScreen = () => {
   const [locationPermission, setLocationPermission] = useState(false);
   const [facing, setFacing] = useState<CameraType>("back");
   const [picture, setPicture] = useState<string | undefined>();
+  const [photoType, setPhotoType] = useState("");
   const camera = useRef<CameraView>(null);
 
   const checkPermissions = async () => {
@@ -130,12 +131,17 @@ const CameraScreen = () => {
       type: "image/jpeg",
       name: "photo.jpg",
     } as any);
-
+    formData.append("photoType", photoType);
+    if (location) {
+      formData.append("latitude", location.coords.latitude.toString());
+      formData.append("longitude", location.coords.longitude.toString());
+    }
+    formData.append("timestamp", Date.now().toString());
     try {
       // Use your device's IP address instead of localhost
       setLoading(true);
       const response = await axios.post(
-        "http:// 192.168.202.80:8080/api/v1/upload", // Replace X with your actual IP
+        `${BASE_URL}/api/v1/upload`, // Replace X with your actual IP
         formData,
         {
           headers: {
@@ -254,10 +260,10 @@ const CameraScreen = () => {
           >
             <View style={{ width: "100%" }}>
               <RNPickerSelect
-                onValueChange={(value) => console.log(value)}
+                onValueChange={(value) => setPhotoType(value)}
                 placeholder={{ label: "Upload Type" }}
                 items={[
-                  { value: "attendance", label: "Attendance" },
+                  { value: "Punch In", label: "Attendance" },
                   { value: "community", label: "Community" },
                 ]}
                 style={{
@@ -327,6 +333,7 @@ const CameraScreen = () => {
   }
   return (
     <View style={{ flex: 1 }}>
+      <Tabs.Screen options={{ tabBarStyle: { display: "none" } }} />
       <CameraView
         mode={"picture"}
         ref={camera}
