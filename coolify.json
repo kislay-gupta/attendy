@@ -1,0 +1,14 @@
+{
+  "name": "attendance-app-backend",
+  "type": "nodejs",
+  "port": 8080,
+  "env": [
+    "MONGODB_URI",
+    "CORS_ORIGIN",
+    "PORT",
+    "REFRESH_TOKEN_SECRET",
+    "REFRESH_TOKEN_EXPIRY",
+    "ACCESS_TOKEN_SECRET",
+    "ACCESS_TOKEN_EXPIRY"
+  ]
+}
