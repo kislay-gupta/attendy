@@ -214,6 +214,9 @@ const CameraScreen = () => {
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0066cc" />
         <Text style={styles.loadingText}>Getting location...</Text>
+        <Text style={styles.loadingText}>
+          To get accurate location don't stand stagnant...
+        </Text>
       </View>
     );
   }

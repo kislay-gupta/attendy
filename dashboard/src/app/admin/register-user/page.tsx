@@ -1,8 +1,8 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, Upload } from "lucide-react";
 import Link from "next/link";
 import {
   Select,
@@ -11,28 +11,86 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
+import axios from "axios";
+import { BASE_URL } from "@/constant";
+import { useAuth } from "@/hooks/use-auth";
+interface NGODATA {
+  _id: string;
+  name: string;
+}
 const RegisterUser = () => {
   const [currentStep, setCurrentStep] = useState(1);
+  const { token } = useAuth();
+  const [ngos, setNgos] = useState<NGODATA[]>([]); // Add this line
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    ngo: "",
-    name: "",
-    contactNumber: "",
+    organization: "",
+    fullName: "",
+    mobileNo: "",
     designation: "",
     email: "",
     password: "",
+    avatar: null as File | null,
   });
 
+  const getNgoData = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/api/v1/org`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setNgos(res.data.data); // Update this line
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    getNgoData();
+  }, []);
   const steps = [
     { id: 1, name: "Organization" },
     { id: 2, name: "Personal Details" },
     { id: 3, name: "Account" },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData({ ...formData, avatar: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement user registration logic
-    console.log(formData);
+    try {
+      const formDataToSend = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== null) {
+          formDataToSend.append(key, value);
+        }
+      });
+      formDataToSend.append("deviceModel", "");
+      formDataToSend.append("deviceManufacture", "");
+      const response = await axios.post(
+        `${BASE_URL}/api/v1/user/register`,
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      console.log(response);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const nextStep = () => {
@@ -53,9 +111,9 @@ const RegisterUser = () => {
                 Select NGO
               </label>
               <Select
-                value={formData.ngo}
+                value={formData.organization}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, ngo: value })
+                  setFormData({ ...formData, organization: value })
                 }
                 required
               >
@@ -63,10 +121,11 @@ const RegisterUser = () => {
                   <SelectValue placeholder="Select an NGO" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">NGO 1</SelectItem>
-                  <SelectItem value="2">NGO 2</SelectItem>
-                  <SelectItem value="3">NGO 3</SelectItem>
-                  <SelectItem value="4">NGO 4</SelectItem>
+                  {ngos.map((ngo) => (
+                    <SelectItem key={ngo._id} value={ngo._id}>
+                      {ngo.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -75,52 +134,85 @@ const RegisterUser = () => {
       case 2:
         return (
           <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Name
-              </label>
-              <Input
-                type="text"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                required
-              />
-            </div>
+            <div className="space-y-6">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-gray-300">
+                  {avatarPreview ? (
+                    <img
+                      src={avatarPreview}
+                      alt="Avatar preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                      <Upload className="w-8 h-8 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                    id="avatar-upload"
+                  />
+                  <label
+                    htmlFor="avatar-upload"
+                    className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    Upload Avatar
+                  </label>
+                </div>
+              </div>
+              <section className="grid grid-cols-1 md:grid-cols-2  gap-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Name
+                  </label>
+                  <Input
+                    type="text"
+                    value={formData.fullName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, fullName: e.target.value })
+                    }
+                    required
+                  />
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Contact Number
-              </label>
-              <Input
-                type="tel"
-                value={formData.contactNumber}
-                onChange={(e) =>
-                  setFormData({ ...formData, contactNumber: e.target.value })
-                }
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Designation
-              </label>
-              <Input
-                type="text"
-                value={formData.designation}
-                onChange={(e) =>
-                  setFormData({ ...formData, designation: e.target.value })
-                }
-                required
-              />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Designation
+                  </label>
+                  <Input
+                    type="text"
+                    value={formData.designation}
+                    onChange={(e) =>
+                      setFormData({ ...formData, designation: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+              </section>
             </div>
           </div>
         );
       case 3:
         return (
           <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contact Number
+              </label>
+              <Input
+                type="tel"
+                value={formData.mobileNo}
+                onChange={(e) =>
+                  setFormData({ ...formData, mobileNo: e.target.value })
+                }
+                required
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email ID

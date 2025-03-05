@@ -67,12 +67,17 @@ const LoginScreen = () => {
     startLoading();
     try {
       const res = await axios.post(`${BASE_URL}/api/v1/user/login`, data);
-      console.log(res.data.data);
+      console.log(res.data.data, "k");
       if (!res.data.data.accessToken) {
         throw new Error("No token received from server");
       }
       await saveToken(res.data.data.accessToken);
-      router.replace("/(root)/");
+      console.log(res.data.data.user.isVerified, "veri");
+      if (res.data.data.user.isVerified) {
+        router.replace("/(root)/");
+      } else {
+        router.replace("/verify/verifydevice");
+      }
     } catch (err) {
       console.log(err);
       if (err instanceof AxiosError) {

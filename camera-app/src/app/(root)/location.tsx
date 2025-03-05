@@ -1,38 +1,71 @@
-import { useState, useEffect } from "react";
-import { Text, View, StyleSheet } from "react-native";
+import { useState, useEffect, useCallback } from "react";
+import { Text, View, StyleSheet, ActivityIndicator } from "react-native";
 import * as Location from "expo-location";
+import { useFocusEffect } from "expo-router";
 
 export default function LocationScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  useEffect(() => {
-    async function getCurrentLocation() {
-      try {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          setErrorMsg("Permission to access location was denied");
+  const [isLoading, setIsLoading] = useState(true);
 
-          return;
+  useFocusEffect(
+    useCallback(() => {
+      let locationSubscription: Location.LocationSubscription | null = null;
+
+      async function getCurrentLocation() {
+        try {
+          setIsLoading(true);
+          setErrorMsg(null);
+
+          // Check if location services are enabled
+          const enabled = await Location.hasServicesEnabledAsync();
+          if (!enabled) {
+            setErrorMsg(
+              "Location services are disabled. Please enable them in your device settings."
+            );
+            return;
+          }
+
+          let { status } = await Location.requestForegroundPermissionsAsync();
+          if (status !== "granted") {
+            setErrorMsg("Permission to access location was denied");
+            return;
+          }
+
+          // Subscribe to location updates
+          locationSubscription = await Location.watchPositionAsync(
+            {
+              accuracy: Location.Accuracy.Highest,
+              distanceInterval: 1, // Update every 1 meter
+              timeInterval: 1000, // Update every 1 second
+            },
+            (newLocation) => {
+              setLocation(newLocation);
+              setIsLoading(false);
+            }
+          );
+        } catch (error: unknown) {
+          setErrorMsg(
+            "Error fetching location: " +
+              (error instanceof Error ? error.message : String(error))
+          );
+        } finally {
+          setIsLoading(false);
         }
-
-        let location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Highest,
-          // maximumAge option is not supported in LocationOptions type
-          // timeout is not supported in LocationOptions, removing it
-        });
-        setLocation(location);
-      } catch (error: unknown) {
-        setErrorMsg(
-          "Error fetching location: " +
-            (error instanceof Error ? error.message : String(error))
-        );
       }
-    }
 
-    getCurrentLocation();
-  }, []);
+      getCurrentLocation();
+
+      // Cleanup function
+      return () => {
+        if (locationSubscription) {
+          locationSubscription.remove();
+        }
+      };
+    }, [])
+  );
 
   let text = "Waiting...";
   if (errorMsg) {
@@ -43,7 +76,11 @@ export default function LocationScreen() {
   console.log(location);
   return (
     <View style={styles.container}>
-      <Text style={styles.paragraph}>{text}</Text>
+      {isLoading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <Text style={styles.paragraph}>{text}</Text>
+      )}
     </View>
   );
 }

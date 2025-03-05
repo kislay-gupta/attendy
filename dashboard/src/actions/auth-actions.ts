@@ -13,13 +13,7 @@ export async function setAuthCookie(token: string): Promise<AuthResponse> {
       return { success: false, message: "Token is required" };
     }
 
-    (await cookies()).set("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-      path: "/",
-    });
+    (await cookies()).set("token", token);
 
     return { success: true };
   } catch (error) {

@@ -1,16 +1,24 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BASE_URL } from "@/constant";
+import axios from "axios";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import useLoader from "@/hooks/use-loader";
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: "",
+    mobileNo: "",
     password: "",
   });
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-
+  const { startLoading, stopLoading, isLoading } = useLoader();
+  const { saveToken } = useAuth();
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -18,11 +26,26 @@ const Login = () => {
       [name]: value,
     }));
   };
-  const handleLogin = () => {
-    console.log(formData);
-
+  const handleLogin = async () => {
+    startLoading();
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/api/v1/user/login`,
+        formData
+      );
+      saveToken(response.data.data.accessToken);
+      if (response.data.data.user.role === "ADMIN") {
+        router.push("/admin");
+      }
+      toast.success(response.data.message);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      stopLoading();
+    }
     // Add your login logic here
   };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-xl shadow-lg">
@@ -42,19 +65,20 @@ const Login = () => {
           <div className="space-y-5">
             <div>
               <label
-                htmlFor="email"
+                htmlFor="mobileNo"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Email address
+                Mobile No.
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
+                id="mobileNo"
+                name="mobileNo"
+                type="number"
+                pattern="[0-9]*"
                 required
                 className="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200"
-                placeholder="Enter your email"
-                value={formData.email}
+                placeholder="Enter your Registered Mobile No."
+                value={formData.mobileNo}
                 onChange={handleChange}
               />
             </div>
@@ -120,10 +144,17 @@ const Login = () => {
           <div>
             <Button
               type="button"
+              disabled={isLoading}
               onClick={handleLogin}
               className="w-full cursor-pointer flex justify-center py-3 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
             >
-              Sign in
+              {isLoading ? (
+                <span className="">
+                  <Loader2 className="animate-spin" />
+                </span>
+              ) : (
+                <span>Sign in</span>
+              )}
             </Button>
           </div>
         </form>

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/hooks/use-auth';
-import { redirect } from 'next/navigation';
-import { useEffect } from 'react';
+import { useAuth } from "@/hooks/use-auth";
+import { redirect } from "next/navigation";
+import { useEffect } from "react";
 
 interface AdminRouteProps {
   children: React.ReactNode;
@@ -10,13 +10,12 @@ interface AdminRouteProps {
 
 export default function AdminRoute({ children }: AdminRouteProps) {
   const { isAuthenticated } = useAuth();
-
   useEffect(() => {
     if (!isAuthenticated) {
-      redirect('/login');
+      redirect("/");
     }
   }, [isAuthenticated]);
-
+  console.log(isAuthenticated);
   if (!isAuthenticated) {
     return null;
   }

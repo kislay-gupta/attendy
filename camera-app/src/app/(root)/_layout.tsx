@@ -78,6 +78,15 @@ export default function RootLayout() {
             }}
           />
           <Tabs.Screen
+            name="location"
+            options={{
+              title: "location",
+              tabBarIcon: ({ color, size }) => (
+                <Ionicons name="map-outline" size={size} color={color} />
+              ),
+            }}
+          />
+          <Tabs.Screen
             name="camera"
             options={{ headerShown: false, href: null }}
           />

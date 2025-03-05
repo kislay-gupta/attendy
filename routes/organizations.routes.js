@@ -15,7 +15,7 @@ router.use(verifyJWT);
 router
   .route("/")
   .get(getAllOrganizations)
-  .post(upload.single("file"), registerOrganization);
+  .post(upload.single("logo"), registerOrganization);
 router.route("/:id").get(getOrganization).patch(updateOrganization);
 
 export default router;
