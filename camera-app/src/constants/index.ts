@@ -1,1 +1,1 @@
-export const BASE_URL = "http://192.168.1.5:8080";
+export const BASE_URL = "https://k4soswsc0okwcckgggw8c4kg.iistbihar.com";

@@ -11,8 +11,11 @@ RUN npm install
 # Copy the rest of the application
 COPY . .
 
+# Set environment variable to use port 3611
+ENV PORT=3011
+
 # Expose the port the app runs on
-EXPOSE 3611
+EXPOSE 3011
 
 # Command to run the application
 CMD ["node", "index.js"]
