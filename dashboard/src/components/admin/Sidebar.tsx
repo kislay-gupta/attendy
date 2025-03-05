@@ -18,11 +18,11 @@ import { Button } from "@/components/ui/button";
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: Building2 },
-  { name: "NGO Management", href: "/admin/ngo", icon: Building2 },
+  { name: "NGO Management", href: "#", icon: Building2 },
   { name: "User Management", href: "/admin/register-user", icon: Users },
   {
-    name: "Attendance Settings",
-    href: "/admin/attendance-settings",
+    name: "Attendance",
+    href: "/admin/attendance",
     icon: Calendar,
   },
 ];

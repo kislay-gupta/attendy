@@ -35,7 +35,15 @@ const uploadPhoto = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Failed to upload the photo");
   }
 });
+const getAllPhotos = asyncHandler(async (req, res) => {
+  const photos = await Photo.find({})
+    .sort({ timestamp: -1 })
+    .populate("user", "fullName email organization");
 
+  return res
+    .status(200)
+    .json(new ApiResponse(200, photos, "Photos retrieved successfully"));
+});
 const getUserPhotos = asyncHandler(async (req, res) => {
   const photos = await Photo.find({ user: req.user._id })
     .sort({ timestamp: -1 })
@@ -111,4 +119,5 @@ export {
   getUserPhotos,
   getPhotosByType,
   getPhotosByDateRange,
+  getAllPhotos,
 };

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Check, Upload } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Upload } from "lucide-react";
 import Link from "next/link";
 import {
   Select,
@@ -14,6 +14,9 @@ import {
 import axios from "axios";
 import { BASE_URL } from "@/constant";
 import { useAuth } from "@/hooks/use-auth";
+import useLoader from "@/hooks/use-loader";
+import Loader from "@/components/shared/Loader";
+import { toast } from "sonner";
 interface NGODATA {
   _id: string;
   name: string;
@@ -32,8 +35,10 @@ const RegisterUser = () => {
     password: "",
     avatar: null as File | null,
   });
-
+  const { isLoading, startLoading, stopLoading } = useLoader();
+  const [loadNgo, setLoadNgo] = useState(false);
   const getNgoData = async () => {
+    setLoadNgo(true);
     try {
       const res = await axios.get(`${BASE_URL}/api/v1/org`, {
         headers: {
@@ -43,6 +48,8 @@ const RegisterUser = () => {
       setNgos(res.data.data); // Update this line
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoadNgo(false);
     }
   };
 
@@ -69,6 +76,7 @@ const RegisterUser = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    startLoading();
     try {
       const formDataToSend = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
@@ -76,8 +84,8 @@ const RegisterUser = () => {
           formDataToSend.append(key, value);
         }
       });
-      formDataToSend.append("deviceModel", "");
-      formDataToSend.append("deviceManufacture", "");
+      formDataToSend.append("deviceModel", "modal");
+      formDataToSend.append("deviceManufacture", "device");
       const response = await axios.post(
         `${BASE_URL}/api/v1/user/register`,
         formDataToSend,
@@ -87,9 +95,24 @@ const RegisterUser = () => {
           },
         }
       );
+      toast.success(response.data.message);
       console.log(response);
+      setCurrentStep(1);
+      setAvatarPreview("");
+      setFormData({
+        organization: "",
+        fullName: "",
+        mobileNo: "",
+        designation: "",
+        email: "",
+        password: "",
+        avatar: null as File | null,
+      });
     } catch (error) {
       console.log(error);
+      toast.error("Something went wrong");
+    } finally {
+      stopLoading();
     }
   };
 
@@ -100,7 +123,9 @@ const RegisterUser = () => {
   const prevStep = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
-
+  if (loadNgo) {
+    return <Loader />;
+  }
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -115,6 +140,7 @@ const RegisterUser = () => {
                 onValueChange={(value) =>
                   setFormData({ ...formData, organization: value })
                 }
+                disabled={loadNgo}
                 required
               >
                 <SelectTrigger className="w-full">
@@ -326,9 +352,17 @@ const RegisterUser = () => {
               ) : (
                 <Button
                   type="submit"
+                  disabled={isLoading}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white px-4"
                 >
-                  Register User
+                  {isLoading ? (
+                    <span>
+                      {" "}
+                      <Loader2 className="animate-spin" />{" "}
+                    </span>
+                  ) : (
+                    <>Register User</>
+                  )}
                 </Button>
               )}
             </div>
