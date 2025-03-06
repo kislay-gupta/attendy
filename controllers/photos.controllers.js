@@ -103,7 +103,7 @@ const getPhotosByDateRange = asyncHandler(async (req, res) => {
   }
 
   const photos = await Photo.find({
-    user: req.user._id,
+    
     timestamp: {
       $gte: new Date(startDate),
     },
