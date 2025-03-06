@@ -92,9 +92,10 @@ const getPhotosByType = asyncHandler(async (req, res) => {
 });
 
 const getPhotosByDateRange = asyncHandler(async (req, res) => {
-  const { startDate, endDate } = req.query;
+  const { startDate } = req.query;
 
-  if (!startDate || !endDate) {
+  if (!startDate) {
+    res.status(400).json(new ApiResponse(400, [], "Start date is required"));
     throw new ApiError(400, "Start date and end date are required");
   }
 
@@ -102,7 +103,6 @@ const getPhotosByDateRange = asyncHandler(async (req, res) => {
     user: req.user._id,
     timestamp: {
       $gte: new Date(startDate),
-      $lte: new Date(endDate),
     },
   })
     .sort({ timestamp: -1 })
