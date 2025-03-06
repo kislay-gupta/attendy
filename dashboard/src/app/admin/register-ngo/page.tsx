@@ -35,9 +35,7 @@ const RegisterNGO = () => {
     name: string;
     description: string;
     logo: File | null;
-    latitude: string;
-    longitude: string;
-    address: string;
+
     workingDays: string[];
     morningAttendanceDeadline: string;
     eveningAttendanceStartTime: string;
@@ -47,9 +45,7 @@ const RegisterNGO = () => {
     name: "",
     description: "",
     logo: null,
-    latitude: "",
-    longitude: "",
-    address: "",
+
     workingDays: [],
     morningAttendanceDeadline: "09:30",
     eveningAttendanceStartTime: "17:00",
@@ -88,9 +84,6 @@ const RegisterNGO = () => {
       if (formData.logo) {
         formDataToSend.append("logo", formData.logo);
       }
-      formDataToSend.append("latitude", formData.latitude);
-      formDataToSend.append("longitude", formData.longitude);
-      formDataToSend.append("address", formData.address);
 
       // Update this part - send working days as individual elements
       formData.workingDays.forEach((day, index) => {
@@ -123,9 +116,6 @@ const RegisterNGO = () => {
         name: "",
         description: "",
         logo: null,
-        latitude: "",
-        longitude: "",
-        address: "",
         workingDays: [],
         morningAttendanceDeadline: "09:30",
         eveningAttendanceStartTime: "17:00",
@@ -273,18 +263,7 @@ const RegisterNGO = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    required
-                  />
-                </div>
+                <div></div>
               </motion.div>
             )}
 
@@ -297,35 +276,17 @@ const RegisterNGO = () => {
                 transition={{ duration: 0.3 }}
                 className="space-y-6"
               >
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Latitude
-                    </label>
-                    <Input
-                      type="number"
-                      step="any"
-                      value={formData.latitude}
-                      onChange={(e) =>
-                        setFormData({ ...formData, latitude: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Longitude
-                    </label>
-                    <Input
-                      type="number"
-                      step="any"
-                      value={formData.longitude}
-                      onChange={(e) =>
-                        setFormData({ ...formData, longitude: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
+                <div className="grid grid-cols-1 gap-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    required
+                  />
                 </div>
               </motion.div>
             )}
