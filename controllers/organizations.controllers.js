@@ -1,4 +1,4 @@
-import { Organization } from "../models/organizations.model.js";
+import { Organization } from "../models/Organizations.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -7,9 +7,7 @@ const registerOrganization = asyncHandler(async (req, res) => {
   const {
     name,
     description,
-    latitude,
-    longitude,
-    address,
+
     workingDays,
     morningAttendanceDeadline,
     eveningAttendanceStartTime,
@@ -23,17 +21,11 @@ const registerOrganization = asyncHandler(async (req, res) => {
   }
 
   // Ensure workingDays is an array
-  const processedWorkingDays = Array.isArray(workingDays) 
-    ? workingDays 
-    : workingDays.split(',').map(day => day.trim());
+  const processedWorkingDays = Array.isArray(workingDays)
+    ? workingDays
+    : workingDays.split(",").map((day) => day.trim());
 
   // Validate location object
-  if (!latitude || !longitude) {
-    throw new ApiError(
-      400,
-      "Location must include latitude, longitude, and address"
-    );
-  }
 
   const existingOrganization = await Organization.findOne({ name });
   if (existingOrganization) {
@@ -44,11 +36,7 @@ const registerOrganization = asyncHandler(async (req, res) => {
     name,
     description,
     logo,
-    location: {
-      latitude,
-      longitude,
-      address,
-    },
+
     workingDays: processedWorkingDays,
     morningAttendanceDeadline: morningAttendanceDeadline || "09:30",
     eveningAttendanceStartTime: eveningAttendanceStartTime || "17:00",

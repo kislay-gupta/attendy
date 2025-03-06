@@ -2,7 +2,6 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
-import mongoose from "mongoose";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -88,13 +87,20 @@ const registerUser = asyncHandler(async (req, res) => {
       .json(new ApiResponse(200, createdUser, "User registered successfully"));
   } catch (error) {
     console.log(error);
-    throw new ApiError(500, "Something went wrong while registering the user");
+    throw new ApiError(
+      500,
+      "Something went wrong while registering the user",
+      []
+    );
   }
 });
 const getCurrentUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id)
+    .select("-password -refreshToken")
+    .populate("organization");
   return res
     .status(200)
-    .json(new ApiResponse(200, req.user, "Current user details"));
+    .json(new ApiResponse(200, user, "Current user details"));
 });
 const loginUser = asyncHandler(async (req, res) => {
   const { mobileNo, password } = req.body;

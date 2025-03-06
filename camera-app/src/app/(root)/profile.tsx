@@ -95,7 +95,6 @@ export default function ProfileScreen() {
     setShowLogoutModal(true);
   };
 
-  console.log(user, "user");
   if (isLoading) {
     return <Loader />;
   }

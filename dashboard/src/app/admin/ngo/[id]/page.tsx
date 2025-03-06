@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -11,6 +11,10 @@ import {
   Calendar,
   Clock,
 } from "lucide-react";
+import { BASE_URL } from "@/constant";
+import axios from "axios";
+import { useAuth } from "@/hooks/use-auth";
+import { NGODATA } from "@/types";
 
 // Mock data for demonstration
 const mockEmployees = [
@@ -27,11 +31,28 @@ const mockEmployees = [
 ];
 
 const NGODetailsPage = () => {
+  const [ngoDetails, setNgoDetails] = useState<NGODATA>();
+  const { token } = useAuth();
   const params = useParams();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const ngoId = params.id;
-
+  const getNGOSDetails = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/api/v1/org/${ngoId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setNgoDetails(res.data.data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+    }
+  };
+  useEffect(() => {
+    getNGOSDetails();
+  }, [ngoId]);
   // Filter employees based on search term
   const filteredEmployees = mockEmployees.filter(
     (employee) =>
@@ -69,7 +90,8 @@ const NGODetailsPage = () => {
               <span className="text-lg font-bold text-white">A</span>
             </div>
             <h1 className="ml-3 text-2xl font-bold text-gray-900">
-              NGO {ngoId} Management
+              NGO <span className="capitalize">{ngoDetails?.name}</span>{" "}
+              Management
             </h1>
           </div>
         </div>
@@ -89,7 +111,7 @@ const NGODetailsPage = () => {
                   Total Employees
                 </h2>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {mockEmployees.length}
+                  {ngoDetails?.users.length}
                 </p>
               </div>
             </div>
@@ -122,10 +144,10 @@ const NGODetailsPage = () => {
                   Attendance Time
                 </h2>
                 <p className="text-sm font-semibold text-gray-900">
-                  In: 09:30 AM
+                  In: {ngoDetails?.morningAttendanceDeadline}
                 </p>
                 <p className="text-sm font-semibold text-gray-900">
-                  Out: 05:00 PM
+                  Out: {ngoDetails?.eveningAttendanceStartTime}
                 </p>
               </div>
             </div>

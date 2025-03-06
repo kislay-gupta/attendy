@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Text,
   Animated,
+  Image,
 } from "react-native";
 import CustomTextInput from "../components/CustomInput";
 import { router } from "expo-router";
@@ -19,7 +20,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { AxiosError } from "axios";
 import CustomAlert from "../components/CustomAlert";
 import Loader from "../components/Loader";
-
+import logo from "../../assets/icon.png";
+import { StatusBar } from "expo-status-bar";
 const LoginScreen = () => {
   // Define form with type interface  const navigation = useNavigation();
   const { saveToken, isAuthenticated } = useAuth();
@@ -67,12 +69,10 @@ const LoginScreen = () => {
     startLoading();
     try {
       const res = await axios.post(`${BASE_URL}/api/v1/user/login`, data);
-      console.log(res.data.data, "k");
       if (!res.data.data.accessToken) {
         throw new Error("No token received from server");
       }
       await saveToken(res.data.data.accessToken);
-      console.log(res.data.data.user.isVerified, "veri");
       if (res.data.data.user.isVerified) {
         router.replace("/(root)/");
       } else {
@@ -98,23 +98,25 @@ const LoginScreen = () => {
     }
   };
 
-  // if (isAuthenticated) {
-  //   return null;
-  // }
-
   if (isLoading) {
     return <Loader />;
   }
 
   return (
     <View style={styles.container}>
+      <StatusBar style="dark" />
       <CustomAlert
         visible={alertConfig.visible}
         title={alertConfig.title}
         message={alertConfig.message}
         onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
       />
-      <Text style={styles.titleText}>Login</Text>
+
+      <View style={styles.logoContainer}>
+        <Image source={logo} style={styles.logo} />
+        <Text style={styles.appTitle}>MDH NGO Connect</Text>
+      </View>
+
       <Animated.View style={[styles.form, { opacity: fadeAnim }]}>
         <FormProvider {...form}>
           <CustomTextInput
@@ -162,6 +164,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+  },
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    resizeMode: "contain",
+  },
+  appTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#005055",
+    marginTop: 10,
   },
   form: {
     width: "100%",

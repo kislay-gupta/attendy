@@ -73,7 +73,6 @@ export default function LocationScreen() {
   } else if (location) {
     text = `Latitude: ${location.coords.latitude}\nLongitude: ${location.coords.longitude}\nAltitude: ${location.coords.altitude}\nAccuracy: ${location.coords.accuracy}m`;
   }
-  console.log(location);
   return (
     <View style={styles.container}>
       {isLoading ? (

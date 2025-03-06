@@ -1,18 +1,9 @@
-import {
-  View,
-  Pressable,
-  StyleSheet,
-  FlatList,
-  Image,
-  Text,
-} from "react-native";
+import { View, Pressable, StyleSheet, FlatList, Image } from "react-native";
 import React, { useCallback, useState } from "react";
 import { Link, useFocusEffect } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as FileSystem from "expo-file-system";
-import { getMediaType, MediaType } from "../../utils/media";
+import { MediaType } from "../../utils/media";
 import * as Network from "expo-network";
-import * as Device from "expo-device";
 import axios from "axios";
 import { BASE_URL } from "../../constants";
 import { useAuth } from "../../hooks/useAuth";
@@ -60,7 +51,6 @@ const HomeScreen = () => {
     }, [])
   );
 
-  console.log(image);
   if (isLoading) {
     return <Loader />;
   }

@@ -1,18 +1,9 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  Linking,
-  Modal,
-  ActivityIndicator,
-} from "react-native";
-import React, { useState } from "react";
-import { Link, Redirect } from "expo-router";
+import { View, Text, ActivityIndicator } from "react-native";
+
+import { Redirect } from "expo-router";
 import { useAuth } from "../hooks/useAuth";
 export default function SignupScreen() {
   const { isAuthenticated } = useAuth();
-  const [modalVisible, setModalVisible] = useState(false);
 
   if (isAuthenticated) {
     return (

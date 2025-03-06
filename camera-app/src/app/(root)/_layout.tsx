@@ -1,19 +1,11 @@
-import { View, Platform, Pressable } from "react-native";
-import { Redirect, Tabs, usePathname } from "expo-router";
+import { Image, Pressable } from "react-native";
+import { Tabs, usePathname } from "expo-router";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-  SafeAreaProvider,
-} from "react-native-safe-area-context";
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { useAuth } from "../../hooks/useAuth";
-
+import logo from "../../../assets/logo.png";
 export default function RootLayout() {
-  const { isAuthenticated } = useAuth();
-  const insets = useSafeAreaInsets();
-  console.log(insets);
   const pathname = usePathname();
 
   return (
@@ -36,15 +28,23 @@ export default function RootLayout() {
               backgroundColor: "white",
             },
             headerLeft: () => {
-              const shouldShowBack = ["/camera", "/[name]"].some((path) =>
-                pathname.includes(path)
-              );
-
-              return shouldShowBack ? (
-                <Pressable onPress={() => navigation.goBack()}>
-                  <Ionicons name="arrow-back" size={24} color="black" />
+              return (
+                <Pressable
+                  onPress={() => {
+                    navigation.navigate("index");
+                  }}
+                  style={{
+                    backgroundColor: "white",
+                    padding: 1,
+                    borderRadius: 50,
+                  }}
+                >
+                  <Image
+                    source={logo}
+                    style={{ borderRadius: 50, width: 50, height: 50 }}
+                  />
                 </Pressable>
-              ) : null;
+              );
             },
             tabBarStyle: {
               backgroundColor: "white",
@@ -62,7 +62,7 @@ export default function RootLayout() {
             name="index"
             options={{
               tabBarLabel: "Home",
-              title: "Home",
+              title: "MDH NGO Connect",
               tabBarIcon: ({ color, size }) => (
                 <Ionicons name="home-outline" size={size} color={color} />
               ),
@@ -98,7 +98,7 @@ export default function RootLayout() {
           />
         </Tabs>
       </SafeAreaView>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
     </SafeAreaProvider>
   );
 }

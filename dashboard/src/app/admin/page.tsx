@@ -1,25 +1,79 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Users,
-  Building2,
-  Calendar,
-  Clock,
-  UserPlus,
-  ChevronRight,
-} from "lucide-react";
+import { Users, Building2, Calendar, Clock, UserPlus, Eye } from "lucide-react";
 import Link from "next/link";
+import axios from "axios";
+import { BASE_URL } from "@/constant";
+import useLoader from "@/hooks/use-loader";
+import { useAuth } from "@/hooks/use-auth";
+import Loader from "@/components/shared/Loader";
+import { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "@/components/shared/DataTable";
+import Hint from "@/components/shared/Hint";
 
 // Mock data for demonstration
-const mockNGOs = [
-  { id: 1, name: "NGO 1", employeeCount: 24, attendance: 85 },
-  { id: 2, name: "NGO 2", employeeCount: 18, attendance: 92 },
-  { id: 3, name: "NGO 3", employeeCount: 12, attendance: 78 },
-  { id: 4, name: "NGO 4", employeeCount: 8, attendance: 88 },
-];
-
+interface NGODATA {
+  _id: string;
+  name: string;
+  users: [];
+}
 const AdminDashboard = () => {
+  const [ngoData, setNgoData] = useState<NGODATA[]>([]);
+  const { startLoading, stopLoading, isLoading } = useLoader();
+  const { token } = useAuth();
+  const getNGOS = async () => {
+    startLoading();
+    try {
+      const response = await axios.get(`${BASE_URL}/api/v1/org`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setNgoData(response.data.data);
+    } catch (error) {
+      console.error("Error fetching NGOs:", error);
+      return [];
+    } finally {
+      stopLoading();
+    }
+  };
+  useEffect(() => {
+    getNGOS();
+  }, []);
+
+  const columns: ColumnDef<NGODATA>[] = [
+    {
+      header: "Name",
+      accessorKey: "name",
+    },
+    {
+      header: "Total Employees",
+      accessorKey: "users",
+      cell: ({ row }) => {
+        return <div className="">{row.original.users.length}</div>;
+      },
+    },
+    {
+      header: "Actions",
+      cell: ({ row }) => {
+        return (
+          <div className="flex ">
+            <div>
+              <Link href={`/admin/ngo/${row.original._id}`}>
+                <Hint label="View">
+                  <Eye size={24} />
+                </Hint>
+              </Link>
+            </div>
+          </div>
+        );
+      },
+    },
+  ];
+  if (isLoading) {
+    return <Loader />;
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -50,7 +104,7 @@ const AdminDashboard = () => {
                   Total NGOs
                 </h2>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {mockNGOs.length}
+                  {ngoData.length}
                 </p>
               </div>
             </div>
@@ -65,9 +119,7 @@ const AdminDashboard = () => {
                 <h2 className="text-sm font-medium text-gray-500">
                   Total Employees
                 </h2>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {mockNGOs.reduce((acc, ngo) => acc + ngo.employeeCount, 0)}
-                </p>
+                <p className="text-2xl font-semibold text-gray-900">96</p>
               </div>
             </div>
           </div>
@@ -128,25 +180,9 @@ const AdminDashboard = () => {
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-medium text-gray-900">Managed NGOs</h2>
           </div>
-          <ul className="divide-y divide-gray-200">
-            {mockNGOs.map((ngo) => (
-              <li key={ngo.id} className="hover:bg-gray-50">
-                <Link href={`/admin/ngo/${ngo.id}`}>
-                  <div className="w-full px-6 py-4 flex items-center justify-between text-left">
-                    <div>
-                      <h3 className="text-md font-medium text-gray-900">
-                        {ngo.name}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {ngo.employeeCount} employees
-                      </p>
-                    </div>
-                    <ChevronRight size={20} className="text-gray-400" />
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <div className="">
+            {ngoData && <DataTable columns={columns} data={ngoData} />}
+          </div>
         </div>
       </main>
     </div>

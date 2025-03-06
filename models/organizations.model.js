@@ -17,19 +17,6 @@ const organizationSchema = new Schema(
       type: String,
       required: true,
     },
-    location: {
-      latitude: {
-        type: Number,
-        required: true,
-      },
-      longitude: {
-        type: Number,
-        required: true,
-      },
-      address: {
-        type: String,
-      },
-    },
 
     users: {
       type: [Schema.Types.ObjectId],

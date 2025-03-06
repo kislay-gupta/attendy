@@ -150,7 +150,7 @@ const CameraScreen = () => {
           },
         }
       );
-      console.log("Upload successful:", response.data);
+
       return response.data;
     } catch (error) {
       console.error("Upload error:", error);
@@ -181,25 +181,9 @@ const CameraScreen = () => {
       return;
     }
     try {
-      const fileName = path.parse(uri).base;
       await UploadImage(uri);
-      await FileSystem.copyAsync({
-        from: uri,
-        to: FileSystem.documentDirectory + fileName,
-      });
 
       // Save location data along with the image
-      if (location) {
-        const locationData = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          timestamp: location.timestamp,
-        };
-        await FileSystem.writeAsStringAsync(
-          FileSystem.documentDirectory + fileName + ".location.json",
-          JSON.stringify(locationData)
-        );
-      }
 
       setPicture(undefined);
       router.back();
@@ -207,7 +191,6 @@ const CameraScreen = () => {
       console.error("Error saving file:", error);
     }
   };
-  console.log(location);
 
   if (isLoadingLocation) {
     return (
@@ -267,7 +250,7 @@ const CameraScreen = () => {
                 placeholder={{ label: "Upload Type" }}
                 items={[
                   { value: "Punch In", label: "Attendance" },
-                  { value: "community", label: "Community" },
+                  { value: "Duty", label: "Community" },
                 ]}
                 style={{
                   viewContainer: {
