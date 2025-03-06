@@ -57,12 +57,14 @@ const getSinglePhoto = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400).json(new ApiResponse(400, [], "Invalid photo ID"));
     throw new ApiError(400, "Invalid photo ID");
   }
 
   const photo = await Photo.findById(id);
 
   if (!photo) {
+    res.status(404).json(new ApiResponse(404, [], "Photo not found"));
     throw new ApiError(404, "Photo not found");
   }
 
@@ -74,6 +76,7 @@ const getPhotosByType = asyncHandler(async (req, res) => {
   const { type } = req.params;
 
   if (!["Punch In", "Punch Out", "Duty"].includes(type)) {
+    res.status(400).json(new ApiResponse(400, [], "Invalid photo type"));
     throw new ApiError(400, "Invalid photo type");
   }
 
@@ -106,7 +109,14 @@ const getPhotosByDateRange = asyncHandler(async (req, res) => {
     },
   })
     .sort({ timestamp: -1 })
-    .populate("user", "name email");
+    .populate({
+      path: "user",
+      select: "fullName", // Select only the fullName of the user
+      populate: {
+        path: "organization",
+        select: "name", // Select only the name of the organization
+      },
+    });
 
   return res
     .status(200)

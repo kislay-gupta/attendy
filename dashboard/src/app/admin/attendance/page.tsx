@@ -18,11 +18,17 @@ import Loader from "@/components/shared/Loader";
 import { useAuth } from "@/hooks/use-auth";
 import { Calendar } from "@/components/ui/calendar";
 
+// Update the User interface to match the response
+interface Organization {
+  _id: string;
+  name: string;
+}
+
 interface User {
   _id: string;
-  email: string;
   fullName: string;
-  organization?: string;
+  email: string;
+  organization: Organization;
 }
 
 interface AttendanceRecord {
@@ -58,6 +64,7 @@ const Page = () => {
         }
       );
       setAttendanceData(response.data.data);
+      console.log(response.data.data);
     } catch (error) {
       console.error("Error fetching attendance data:", error);
     } finally {
@@ -71,8 +78,12 @@ const Page = () => {
     return () => clearInterval(interval);
   }, [date]);
 
-  const filteredData = attendanceData.filter((record) =>
-    record.user.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredData = attendanceData.filter(
+    (record) =>
+      record.user?.fullName
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      record.user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
   return (
     <div className="p-8 grid grid-cols-12 gap-2">
@@ -91,7 +102,7 @@ const Page = () => {
           <h1 className="text-2xl font-bold">Attendance Records</h1>
           <div className="w-1/3">
             <Input
-              placeholder="Search by name..."
+              placeholder="Search by name or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="max-w-sm"
@@ -103,8 +114,8 @@ const Page = () => {
           <Table className="bg-amber-50">
             <TableHeader>
               <TableRow>
-                <TableHead>Employee Name</TableHead>
-                <TableHead>Email</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Organization</TableHead>
                 <TableHead>Photo Type</TableHead>
                 <TableHead>Timestamp</TableHead>
                 <TableHead>Location</TableHead>
@@ -112,32 +123,31 @@ const Page = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredData.map((record) => (
-                <TableRow key={record._id}>
-                  <TableCell className="font-medium">
-                    {record.user.fullName}
-                  </TableCell>
-                  <TableCell>{record.user.email}</TableCell>
-                  <TableCell>{record.photoType}</TableCell>
-                  <TableCell>
-                    {format(new Date(record.timestamp), "PPpp")}
-                  </TableCell>
-                  <TableCell>
-                    {record.latitude}, {record.longitude}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        window.open(`${BASE_URL}/${record.img}`, "_blank")
-                      }
-                    >
-                      View Photo
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {attendanceData &&
+                filteredData.map((record) => (
+                  <TableRow key={record._id}>
+                    <TableCell>{record.user.fullName}</TableCell>
+                    <TableCell>{record.user.organization.name}</TableCell>
+                    <TableCell>{record.photoType}</TableCell>
+                    <TableCell>
+                      {format(new Date(record.timestamp), "PPpp")}
+                    </TableCell>
+                    <TableCell>
+                      {record.latitude}, {record.longitude}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          window.open(`${BASE_URL}/${record.img}`, "_blank")
+                        }
+                      >
+                        View Photo
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </div>
