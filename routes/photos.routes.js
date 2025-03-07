@@ -6,6 +6,7 @@ import {
   getPhotosByDateRange,
   getSinglePhoto,
   getAllPhotos,
+  getUserPhotosByDateRange,
 } from "../controllers/photos.controllers.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -22,7 +23,7 @@ router.route("/type/:type").get(getPhotosByType);
 
 // Get photos by date range
 router.route("/date-range").get(getPhotosByDateRange);
-router.route("/date-range-user").get(getPhotosByDateRange);
+router.route("/date-range-user").get(getUserPhotosByDateRange);
 
 router.route("/:id").get(getSinglePhoto);
 export default router;

@@ -96,6 +96,12 @@ export default function RootLayout() {
               href: null,
             }}
           />
+          <Tabs.Screen
+            name="date/[date]"
+            options={{
+              href: null,
+            }}
+          />
         </Tabs>
       </SafeAreaView>
       <StatusBar style="dark" />
