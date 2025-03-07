@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Clock } from "lucide-react";
@@ -12,21 +12,81 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { BASE_URL } from "@/constant";
+import axios from "axios";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
+import useLoader from "@/hooks/use-loader";
+import Loader from "@/components/shared/Loader";
+
+interface NGO {
+  _id: string;
+  name: string;
+  morningAttendanceDeadline: string;
+  eveningAttendanceStartTime: string;
+}
+
 const AttendanceSettings = () => {
   const [selectedNGO, setSelectedNGO] = useState("");
   const [morningDeadline, setMorningDeadline] = useState("09:30");
   const [eveningStartTime, setEveningStartTime] = useState("17:00");
+  const [ngoList, setNgoList] = useState<NGO[]>([]);
+  const { token } = useAuth();
+  const { startLoading, stopLoading, isLoading } = useLoader();
+  // Remove searchParams and ngo parameter
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: Implement attendance settings update logic
-    console.log({
-      ngo: selectedNGO,
-      morningDeadline,
-      eveningStartTime,
-    });
+  const getNgo = async () => {
+    startLoading();
+    try {
+      const response = await axios.get(`${BASE_URL}/api/v1/org`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setNgoList(response.data.data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      stopLoading();
+    }
   };
 
+  useEffect(() => {
+    getNgo();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    startLoading();
+    try {
+      const res = await axios.patch(
+        `${BASE_URL}/api/v1/org/${selectedNGO}`,
+        {
+          morningAttendanceDeadline: morningDeadline,
+          eveningAttendanceStartTime: eveningStartTime,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      toast.success(
+        res.data.message || "Attendance settings updated successfully!"
+      );
+      setSelectedNGO("");
+      setMorningDeadline("");
+      setEveningStartTime("");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to update attendance settings");
+    } finally {
+      stopLoading();
+    }
+  };
+  if (isLoading) {
+    return <Loader />;
+  }
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-2xl mx-auto">
@@ -54,14 +114,16 @@ const AttendanceSettings = () => {
                 Select NGO
               </label>
               <Select value={selectedNGO} onValueChange={setSelectedNGO}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger disabled={isLoading} className="w-full">
                   <SelectValue placeholder="Select an NGO" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">NGO 1</SelectItem>
-                  <SelectItem value="2">NGO 2</SelectItem>
-                  <SelectItem value="3">NGO 3</SelectItem>
-                  <SelectItem value="4">NGO 4</SelectItem>
+                  {ngoList &&
+                    ngoList.map((ngo) => (
+                      <SelectItem key={ngo._id} value={ngo._id}>
+                        {ngo.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -101,6 +163,7 @@ const AttendanceSettings = () => {
             <div className="pt-4">
               <Button
                 type="submit"
+                disabled={isLoading}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Save Attendance Settings

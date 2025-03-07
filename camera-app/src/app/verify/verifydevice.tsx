@@ -61,7 +61,7 @@ export default function VerifyDevice() {
         <Pressable
           onPress={handleVerification}
           style={{
-            backgroundColor: "#007AFF",
+            backgroundColor: "#005055",
             paddingHorizontal: 24,
             paddingVertical: 12,
             borderRadius: 8,
@@ -72,12 +72,19 @@ export default function VerifyDevice() {
             shadowRadius: 3.84,
           }}
         >
-          <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
+          <Text
+            style={{
+              color: "white",
+              flexDirection: "row",
+              fontSize: 16,
+              fontWeight: "600",
+            }}
+          >
             {!isLoading ? (
               <>Verify Device</>
             ) : (
               <>
-                <ActivityIndicator size="large" color="#0066cc" />
+                <ActivityIndicator size="large" color="#005055" />
                 verifying...
               </>
             )}
@@ -118,7 +125,7 @@ export default function VerifyDevice() {
             <Pressable
               onPress={() => setShowError(false)}
               style={{
-                backgroundColor: "#007AFF",
+                backgroundColor: "#005055",
                 paddingHorizontal: 20,
                 paddingVertical: 10,
                 borderRadius: 5,

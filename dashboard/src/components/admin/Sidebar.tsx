@@ -20,6 +20,8 @@ const navigation = [
   { name: "Dashboard", href: "/admin", icon: Building2 },
   { name: "NGO Management", href: "#", icon: Building2 },
   { name: "User Management", href: "/admin/register-user", icon: Users },
+  { name: "Duty Pic", href: "/admin/duty-pic", icon: Users },
+
   {
     name: "Attendance",
     href: "/admin/attendance",

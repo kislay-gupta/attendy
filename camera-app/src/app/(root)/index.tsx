@@ -6,8 +6,9 @@ import {
   Button,
   Text,
   SectionList,
+  Alert,
 } from "react-native";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link, router, useFocusEffect } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import { MediaType } from "../../utils/media";
@@ -19,12 +20,6 @@ import useLoader from "../../hooks/use-loader";
 import Loader from "../../components/Loader";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { format, parseISO } from "date-fns";
-
-type User = {
-  _id: string;
-  email: string;
-  fullName: string;
-};
 
 type Media = {
   _id: string;
@@ -46,12 +41,74 @@ type Section = {
 };
 
 const HomeScreen = () => {
-  const { token } = useAuth();
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [images, setImages] = useState<Media[]>([]);
   const [groupedImages, setGroupedImages] = useState<Section[]>([]);
   const { startLoading, stopLoading, isLoading } = useLoader();
+  const [user, setUser] = useState<User | null>(null);
+  const { token, loadToken, removeToken } = useAuth();
+  const [timeLapsed, setTimeLapsed] = useState(false);
+  useEffect(() => {
+    const initializeToken = async () => {
+      if (!token) {
+        await loadToken();
+      }
+    };
 
+    initializeToken();
+  }, []);
+  useEffect(() => {
+    if (token) {
+      getUser();
+    }
+  }, [token]);
+  const getUser = async () => {
+    startLoading();
+    try {
+      const response = await axios.get(`${BASE_URL}/api/v1/user`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUser(response.data.data);
+    } catch (error: any) {
+      console.log(error);
+      // Handle 401 unauthorized error
+      if (error?.response?.status === 401) {
+        Alert.alert(
+          "Session Expired",
+          "Your session has expired. Please login again.",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                removeToken();
+                router.push("/login");
+                router.dismissAll();
+              },
+            },
+          ]
+        );
+      }
+    } finally {
+      stopLoading();
+    }
+  };
+  useFocusEffect(
+    useCallback(() => {
+      if (!user || !user.organization) return; // Early return if user data isn't available yet
+
+      const currentTime = format(Date.now(), "HH:mm");
+      const deadline = user.organization.morningAttendanceDeadline;
+
+      if (deadline && currentTime > deadline) {
+        setTimeLapsed(true);
+        console.log(deadline);
+      } else {
+        setTimeLapsed(false);
+      }
+    }, [user]) // Add user as a dependency
+  );
   async function fetchDeviceIp() {
     try {
       const ipAddress = await Network.getIpAddressAsync();
@@ -193,7 +250,7 @@ const HomeScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Attendance Photos</Text>
-        <Button title="Select Date" onPress={showDatePicker} />
+        <Button color="#005055" title="Select Date" onPress={showDatePicker} />
       </View>
 
       <DateTimePickerModal
@@ -218,12 +275,13 @@ const HomeScreen = () => {
           <Text style={styles.emptyStateText}>No attendance photos found</Text>
         </View>
       )}
-
-      <Link href="/camera" asChild>
-        <Pressable style={styles.floatingButton}>
-          <MaterialIcons name="photo-camera" size={30} color="white" />
-        </Pressable>
-      </Link>
+      {!timeLapsed && (
+        <Link href="/camera" asChild>
+          <Pressable style={styles.floatingButton}>
+            <MaterialIcons name="photo-camera" size={30} color="white" />
+          </Pressable>
+        </Link>
+      )}
     </View>
   );
 };
@@ -306,7 +364,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   floatingButton: {
-    backgroundColor: "royalblue",
+    backgroundColor: "#005055",
     padding: 15,
     borderRadius: 50,
     position: "absolute",

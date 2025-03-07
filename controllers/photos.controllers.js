@@ -81,11 +81,17 @@ const getPhotosByType = asyncHandler(async (req, res) => {
   }
 
   const photos = await Photo.find({
-    user: req.user._id,
     photoType: type,
   })
     .sort({ timestamp: -1 })
-    .populate("user", "name email");
+    .populate({
+      path: "user",
+      select: "fullName", // Select only the fullName of the user
+      populate: {
+        path: "organization",
+        select: "name", // Select only the name of the organization
+      },
+    });
 
   return res
     .status(200)

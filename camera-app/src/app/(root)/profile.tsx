@@ -3,34 +3,19 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Linking,
   Alert,
   Modal,
   Image,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import useLoader from "../../hooks/use-loader";
 import axios from "axios";
 import { BASE_URL } from "../../constants/";
 import { useAuth } from "../../hooks/useAuth";
 import Loader from "../../components/Loader";
-
-interface User {
-  _id: string;
-  fullName: string;
-  email: string;
-  mobileNo: string;
-  avatar?: string;
-  username: string;
-  deviceInfo: {
-    deviceManufacture: string;
-    deviceModel: string;
-  };
-  isVerified: boolean;
-  role: string;
-}
+import { format } from "date-fns";
 
 export default function ProfileScreen() {
   const [user, setUser] = useState<User | null>(null);
@@ -43,6 +28,7 @@ export default function ProfileScreen() {
         await loadToken();
       }
     };
+
     initializeToken();
   }, []);
   useEffect(() => {
@@ -91,10 +77,12 @@ export default function ProfileScreen() {
       stopLoading();
     }
   };
+
+  useFocusEffect(useCallback(() => {}, []));
+
   const handleLogoutPress = () => {
     setShowLogoutModal(true);
   };
-
   if (isLoading) {
     return <Loader />;
   }
@@ -120,6 +108,7 @@ export default function ProfileScreen() {
           <Text style={styles.name}>{user?.fullName}</Text>
           <Text style={styles.username}>@{user?.username}</Text>
           <Text style={styles.email}>{user?.email}</Text>
+
           <View style={styles.deviceInfo}>
             <Ionicons name="phone-portrait-outline" size={16} color="#666" />
             <Text style={styles.deviceText}>

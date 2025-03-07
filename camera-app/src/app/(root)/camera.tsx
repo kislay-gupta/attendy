@@ -195,7 +195,7 @@ const CameraScreen = () => {
   if (isLoadingLocation) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0066cc" />
+        <ActivityIndicator size="large" color="#005055" />
         <Text style={styles.loadingText}>Getting location...</Text>
         <Text style={styles.loadingText}>
           To get accurate location don't stand stagnant...
@@ -206,7 +206,7 @@ const CameraScreen = () => {
   if (!locationPermission) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0066cc" />
+        <ActivityIndicator size="large" color="#005055" />
         <Text style={styles.loadingText}>Location permission is required</Text>
       </View>
     );
@@ -249,8 +249,9 @@ const CameraScreen = () => {
                 onValueChange={(value) => setPhotoType(value)}
                 placeholder={{ label: "Upload Type" }}
                 items={[
-                  { value: "Punch In", label: "Attendance" },
+                  { value: "Punch In", label: "Punch In" },
                   { value: "Duty", label: "Community" },
+                  { value: "Punch Out", label: "Punch Out" },
                 ]}
                 style={{
                   viewContainer: {
@@ -294,7 +295,7 @@ const CameraScreen = () => {
                   <Pressable
                     style={[
                       styles.buttonContainer,
-                      { backgroundColor: "#2196F3" },
+                      { backgroundColor: "#005055" },
                     ]}
                     onPress={() => saveFile(picture)}
                   >
@@ -422,7 +423,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#2196F3",
+    backgroundColor: "#005055",
     padding: 10,
     borderRadius: 5,
     gap: 10,

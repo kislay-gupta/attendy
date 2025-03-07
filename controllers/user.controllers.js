@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
-
+import { Organization } from "../models/ngo.model.js";
 const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -57,6 +57,7 @@ const registerUser = asyncHandler(async (req, res) => {
   if (!avatar) {
     throw new ApiError(400, "Avatar file is required");
   }
+
   const createdUserName = fullName.slice(0, 2) + mobileNo.slice(8, 10);
   try {
     const user = await User.create({
@@ -82,6 +83,15 @@ const registerUser = asyncHandler(async (req, res) => {
         "Something went wrong while registering the user"
       );
     }
+    const org = await Organization.findByIdAndUpdate(
+      organization,
+      { $addToSet: { users: user._id } },
+      { new: true }
+    );
+    if (!org) {
+      throw new ApiError(404, "NGO Not found");
+    }
+
     return res
       .status(201)
       .json(new ApiResponse(200, createdUser, "User registered successfully"));
