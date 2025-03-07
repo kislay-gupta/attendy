@@ -97,7 +97,7 @@ const Page = () => {
                 <TableRow key={photo._id}>
                   <TableCell>{photo.user.fullName}</TableCell>
                   <TableCell>{photo.photoType}</TableCell>
-                  <TableCell>{photo.user.organization.name}</TableCell>
+                  <TableCell>{photo.user?.organization?.name}</TableCell>
 
                   <TableCell>
                     {format(new Date(photo.timestamp), "PPpp")}

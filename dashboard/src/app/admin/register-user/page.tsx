@@ -96,7 +96,6 @@ const RegisterUser = () => {
         }
       );
       toast.success(response.data.message);
-      console.log(response);
       setCurrentStep(1);
       setAvatarPreview("");
       setFormData({

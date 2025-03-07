@@ -74,7 +74,6 @@ const RegisterNGO = () => {
   const prevStep = () => {
     if (currentStep > 0) setCurrentStep(currentStep - 1);
   };
-  console.log(formData.workingDays);
   const handleSubmit = async () => {
     startLoading();
     try {
@@ -109,7 +108,6 @@ const RegisterNGO = () => {
           },
         }
       );
-      console.log(response);
       setImagePreview(null);
       toast.success(response.data.message);
       setFormData({

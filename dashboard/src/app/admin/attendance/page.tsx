@@ -54,7 +54,6 @@ const Page = () => {
     try {
       startLoading();
       const formattedDate = date ? format(date, "yyyy-MM-dd") : "";
-      console.log(formattedDate);
       const response = await axios.get(
         `${BASE_URL}/api/v1/upload/date-range/?startDate=${formattedDate}`,
         {
@@ -64,7 +63,6 @@ const Page = () => {
         }
       );
       setAttendanceData(response.data.data);
-      console.log(response.data.data);
     } catch (error) {
       console.error("Error fetching attendance data:", error);
     } finally {

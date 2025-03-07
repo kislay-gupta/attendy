@@ -15,7 +15,6 @@ export default function AdminRoute({ children }: AdminRouteProps) {
       redirect("/");
     }
   }, [isAuthenticated]);
-  console.log(isAuthenticated);
   if (!isAuthenticated) {
     return null;
   }

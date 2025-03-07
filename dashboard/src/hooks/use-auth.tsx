@@ -50,10 +50,7 @@ export const useAuth = () => {
   // useEffect(() => {
   //   loadToken();
   // }, []);
-  useEffect(() => {
-    console.log("Current token state:", token);
-    console.log("Cookie token value:", cookies.get("token"));
-  }, [token]);
+  useEffect(() => {}, [token]);
   return {
     token,
     saveToken,
