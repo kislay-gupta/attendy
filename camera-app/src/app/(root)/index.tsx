@@ -1,6 +1,13 @@
-import { View, Pressable, StyleSheet, FlatList, Image } from "react-native";
+import {
+  View,
+  Pressable,
+  StyleSheet,
+  FlatList,
+  Image,
+  Button,
+} from "react-native";
 import React, { useCallback, useState } from "react";
-import { Link, useFocusEffect } from "expo-router";
+import { Link, router, useFocusEffect } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import { MediaType } from "../../utils/media";
 import * as Network from "expo-network";
@@ -9,6 +16,9 @@ import { BASE_URL } from "../../constants";
 import { useAuth } from "../../hooks/useAuth";
 import useLoader from "../../hooks/use-loader";
 import Loader from "../../components/Loader";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { format } from "date-fns";
+
 type Media = {
   _id: string;
   name: string;
@@ -17,6 +27,8 @@ type Media = {
 };
 const HomeScreen = () => {
   const { token } = useAuth();
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+
   const [image, setImage] = useState<Media[]>([]);
   const { startLoading, stopLoading, isLoading } = useLoader();
   async function fetchDeviceIp() {
@@ -43,6 +55,21 @@ const HomeScreen = () => {
     }
   };
 
+  const showDatePicker = () => {
+    setDatePickerVisibility(true);
+  };
+
+  const hideDatePicker = () => {
+    setDatePickerVisibility(false);
+  };
+
+  const handleConfirm = (date: Date) => {
+    const formattedDate = date ? format(date.toString(), "yyyy-MM-dd") : "";
+    hideDatePicker();
+    router.push(`/date/${formattedDate}`);
+    console.warn("A date has been picked: ", date);
+  };
+
   useFocusEffect(
     useCallback(() => {
       // loadFiles();
@@ -56,6 +83,14 @@ const HomeScreen = () => {
   }
   return (
     <View style={{ flex: 1, backgroundColor: "#FAF3E0" }}>
+      <Button title="Show Date Picker" onPress={showDatePicker} />
+      <DateTimePickerModal
+        isVisible={isDatePickerVisible}
+        mode="date"
+        onConfirm={() => handleConfirm(new Date())}
+        onCancel={hideDatePicker}
+      />
+
       <FlatList
         data={image}
         contentContainerStyle={{ gap: 1 }}

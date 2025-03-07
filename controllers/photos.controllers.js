@@ -103,7 +103,36 @@ const getPhotosByDateRange = asyncHandler(async (req, res) => {
   }
 
   const photos = await Photo.find({
-    
+    timestamp: {
+      $gte: new Date(startDate),
+    },
+  })
+    .sort({ timestamp: -1 })
+    .populate({
+      path: "user",
+      select: "fullName", // Select only the fullName of the user
+      populate: {
+        path: "organization",
+        select: "name", // Select only the name of the organization
+      },
+    });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, photos, "Photos retrieved successfully"));
+});
+
+const getUserPhotosByDateRange = asyncHandler(async (req, res) => {
+  const { startDate } = req.query;
+
+  if (!startDate) {
+    res.status(400).json(new ApiResponse(400, [], "Start date is required"));
+    throw new ApiError(400, "Start date and end date are required");
+  }
+
+  const photos = await Photo.find({
+    user: req.user._id,
+
     timestamp: {
       $gte: new Date(startDate),
     },
@@ -130,4 +159,5 @@ export {
   getPhotosByType,
   getPhotosByDateRange,
   getAllPhotos,
+  getUserPhotosByDateRange,
 };

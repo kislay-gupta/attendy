@@ -17,5 +17,5 @@ router
   .get(getAllOrganizations)
   .post(upload.single("logo"), registerOrganization);
 router.route("/:id").get(getOrganization).patch(updateOrganization);
-
+router.route("/add-employee").post(addUserToOrganization);
 export default router;
