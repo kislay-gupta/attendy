@@ -5,6 +5,7 @@ import {
   logoutUser,
   verifyDevice,
   getCurrentUser,
+  getAllUser,
 } from "../controllers/user.controllers.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -15,6 +16,7 @@ router.route("/login").post(loginUser);
 
 // protected routes
 router.route("/").get(verifyJWT, getCurrentUser);
+router.route("/all").get(verifyJWT, getAllUser);
 router.route("/verify").post(verifyJWT, verifyDevice);
 router.route("/logout").post(verifyJWT, logoutUser);
 

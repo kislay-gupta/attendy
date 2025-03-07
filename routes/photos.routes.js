@@ -19,7 +19,7 @@ router.use(verifyJWT); // Apply authentication to all routes
 router.route("/").post(upload.single("file"), uploadPhoto).get(getUserPhotos);
 router.route("/get-all-photo").get(getAllPhotos);
 // Get photos by type (Punch In, Punch Out, Duty)
-router.route("/type/:type").get(getPhotosByType);
+router.route("/type").get(getPhotosByType);
 
 // Get photos by date range
 router.route("/date-range").get(getPhotosByDateRange);

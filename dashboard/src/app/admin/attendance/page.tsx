@@ -45,7 +45,7 @@ interface AttendanceRecord {
 
 const Page = () => {
   const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<Date | undefined>(new Date());
 
   const [searchQuery, setSearchQuery] = useState("");
   const { isLoading, startLoading, stopLoading } = useLoader();

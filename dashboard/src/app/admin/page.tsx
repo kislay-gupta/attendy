@@ -1,7 +1,15 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Users, Building2, Calendar, Clock, UserPlus, Eye } from "lucide-react";
+import {
+  Users,
+  Building2,
+  Calendar,
+  Clock,
+  UserPlus,
+  Eye,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
 import { BASE_URL } from "@/constant";
@@ -11,6 +19,8 @@ import Loader from "@/components/shared/Loader";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/shared/DataTable";
 import Hint from "@/components/shared/Hint";
+import { ConfirmModal } from "@/components/shared/ConfirmModal";
+import { toast } from "sonner";
 
 // Mock data for demonstration
 interface NGODATA {
@@ -41,7 +51,22 @@ const AdminDashboard = () => {
   useEffect(() => {
     getNGOS();
   }, []);
-
+  const deleteNgo = async (id: string) => {
+    try {
+      const response = await axios.delete(`${BASE_URL}/api/v1/org/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      toast.success(response.data.message);
+      getNGOS();
+    } catch (error) {
+      console.error("Error fetching NGOs:", error);
+      return [];
+    } finally {
+      stopLoading();
+    }
+  };
   const columns: ColumnDef<NGODATA>[] = [
     {
       header: "Name",
@@ -58,13 +83,28 @@ const AdminDashboard = () => {
       header: "Actions",
       cell: ({ row }) => {
         return (
-          <div className="flex ">
+          <div className="flex gap-2 items-center">
             <div>
               <Link href={`/admin/ngo/${row.original._id}`}>
                 <Hint label="View">
-                  <Eye size={24} />
+                  <Eye size={16} />
                 </Hint>
               </Link>
+            </div>
+            <div className="my-auto">
+              <ConfirmModal
+                variant="delete"
+                onConfirm={() => {
+                  deleteNgo(row.original._id);
+                }}
+                header="Are You sure?"
+              >
+                <Button className="my-auto" variant="ghost" size="icon">
+                  <Hint label="delete">
+                    <Trash2 size={16} />
+                  </Hint>
+                </Button>
+              </ConfirmModal>
             </div>
           </div>
         );
@@ -104,7 +144,7 @@ const AdminDashboard = () => {
                   Total NGOs
                 </h2>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {ngoData.length}
+                  {ngoData?.length}
                 </p>
               </div>
             </div>

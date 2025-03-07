@@ -367,9 +367,21 @@ const RegisterNGO = () => {
           </AnimatePresence>
 
           <div className="flex justify-between mt-6">
-            {currentStep > 0 && <Button onClick={prevStep}>Previous</Button>}
+            {currentStep > 0 && (
+              <Button
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4"
+                onClick={prevStep}
+              >
+                Previous
+              </Button>
+            )}
             {currentStep < 2 ? (
-              <Button onClick={nextStep}>Next</Button>
+              <Button
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4"
+                onClick={nextStep}
+              >
+                Next
+              </Button>
             ) : (
               <Button onClick={handleSubmit} disabled={isLoading} type="submit">
                 {isLoading ? (

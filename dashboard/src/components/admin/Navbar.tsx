@@ -68,6 +68,7 @@ export function Navbar({ isCollapsed, toggleSidebar }: NavbarProps) {
             <span className="text-sm font-medium">Admin</span>
           </div>
           <ConfirmModal
+            variant="warning"
             onConfirm={handleLogOut}
             description="Are you sure you want to log out? You will need to sign in again to access the dashboard."
             header="Log Out"

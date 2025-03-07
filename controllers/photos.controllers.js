@@ -73,15 +73,62 @@ const getSinglePhoto = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, photo, "Photo retrieved successfully"));
 });
 const getPhotosByType = asyncHandler(async (req, res) => {
-  const { type } = req.params;
+  const { type, userId, startDate } = req.query;
+  if (!["Punch In", "Punch Out", "Duty"].includes(type)) {
+    res.status(400).json(new ApiResponse(400, [], "Invalid photo type"));
+    throw new ApiError(400, "Invalid photo type");
+  }
+  if (!userId || !startDate) {
+    res
+      .status(400)
+      .json(new ApiResponse(400, [], "User ID and start date are required"));
+    throw new ApiError(400, "User ID and start date are required");
+  }
 
+  const parsedDate = new Date(startDate);
+  const photos = await Photo.find({
+    user: userId,
+    photoType: type,
+    timestamp: {
+      $gte: parsedDate,
+    },
+  })
+    .sort({ timestamp: -1 })
+    .populate({
+      path: "user",
+      select: "fullName", // Select only the fullName of the user
+      populate: {
+        path: "organization",
+        select: "name", // Select only the name of the organization
+      },
+    });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, photos, `${type} photos retrieved successfully`)
+    );
+});
+
+const getUserPhotosByType = asyncHandler(async (req, res) => {
+  const { type } = req.params;
+  const { startDate } = req.query;
+
+  if (!startDate) {
+    res.status(400).json(new ApiResponse(400, [], "Start date is required"));
+    throw new ApiError(400, "Start date and end date are required");
+  }
   if (!["Punch In", "Punch Out", "Duty"].includes(type)) {
     res.status(400).json(new ApiResponse(400, [], "Invalid photo type"));
     throw new ApiError(400, "Invalid photo type");
   }
 
   const photos = await Photo.find({
+    user: req.user._id,
     photoType: type,
+    timestamp: {
+      $gte: new Date(startDate),
+    },
   })
     .sort({ timestamp: -1 })
     .populate({

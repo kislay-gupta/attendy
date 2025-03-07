@@ -112,6 +112,16 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, user, "Current user details"));
 });
+
+const getAllUser = asyncHandler(async (req, res) => {
+  const user = await User.find()
+    .select("-password -refreshToken")
+    .populate("organization");
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Current user details"));
+});
+
 const loginUser = asyncHandler(async (req, res) => {
   const { mobileNo, password } = req.body;
   if (!mobileNo || !password) {
@@ -267,6 +277,7 @@ export {
   registerUser,
   loginUser,
   getCurrentUser,
+  getAllUser,
   logoutUser,
   refreshAccessToken,
   changeCurrentPassword,
