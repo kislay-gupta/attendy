@@ -8,14 +8,7 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copy source files first
-COPY src/ ./src/
-COPY index.js ./
-
-# Copy public folder
-COPY public/ ./public/
-
-# Copy any remaining necessary files
+# Copy all application files
 COPY . .
 
 # Set environment variable to use port 3611
