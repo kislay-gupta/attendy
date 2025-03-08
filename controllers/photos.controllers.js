@@ -4,12 +4,12 @@ import { ApiError } from "../utils/ApiError.js";
 import { Photo } from "../models/photo.model.js";
 import mongoose from "mongoose";
 const uploadPhoto = asyncHandler(async (req, res) => {
-  const { latitude, longitude, photoType, timestamp } = req.body;
+  const { latitude, longitude, photoType, timestamp, address } = req.body;
 
   if (!latitude || !longitude || !photoType) {
     throw new ApiError(400, "Latitude, longitude and photoType are required");
   }
-
+  console.log(address);
   if (!["Punch In", "Punch Out", "Duty"].includes(photoType)) {
     throw new ApiError(400, "Invalid photo type");
   }
@@ -25,6 +25,7 @@ const uploadPhoto = asyncHandler(async (req, res) => {
       longitude,
       photoType,
       timestamp,
+      address,
       user: req.user._id,
     });
 

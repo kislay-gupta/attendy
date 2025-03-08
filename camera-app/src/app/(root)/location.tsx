@@ -4,11 +4,24 @@ import * as Location from "expo-location";
 import { useFocusEffect } from "expo-router";
 
 export default function LocationScreen() {
-  const [location, setLocation] = useState<Location.LocationObject | null>(
-    null
-  );
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [geocodedAddress, setGeocodedAddress] = useState<Location.LocationGeocodedAddress | null>(null);
+
+  const getAddressFromCoords = async (latitude: number, longitude: number) => {
+    try {
+      const addresses = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      });
+      if (addresses.length > 0) {
+        setGeocodedAddress(addresses[0]);
+      }
+    } catch (error) {
+      console.error('Error getting address:', error);
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -35,6 +48,7 @@ export default function LocationScreen() {
           }
 
           // Subscribe to location updates
+
           locationSubscription = await Location.watchPositionAsync(
             {
               accuracy: Location.Accuracy.Highest,
@@ -66,13 +80,22 @@ export default function LocationScreen() {
       };
     }, [])
   );
-
   let text = "Waiting...";
   if (errorMsg) {
     text = errorMsg;
   } else if (location) {
     text = `Latitude: ${location.coords.latitude}\nLongitude: ${location.coords.longitude}\nAltitude: ${location.coords.altitude}\nAccuracy: ${location.coords.accuracy}m`;
+    if (geocodedAddress) {
+      text += `\n\nAddress:\n${geocodedAddress.street || ''} ${geocodedAddress.streetNumber || ''}\n${geocodedAddress.city || ''}, ${geocodedAddress.region || ''} ${geocodedAddress.postalCode || ''}\n${geocodedAddress.country || ''}`;
+    }
   }
+  // Update the useEffect to get address when location changes
+  useEffect(() => {
+    if (location) {
+      getAddressFromCoords(location.coords.latitude, location.coords.longitude);
+    }
+  }, [location]);
+  console.log(location);
   return (
     <View style={styles.container}>
       {isLoading ? (

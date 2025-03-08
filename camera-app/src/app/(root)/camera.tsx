@@ -14,13 +14,13 @@ import { router, Tabs } from "expo-router";
 import { useCameraPermissions, CameraType, CameraView } from "expo-camera";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import path from "path";
-import * as FileSystem from "expo-file-system";
+
 import type { LocationObject } from "expo-location";
 import * as Location from "expo-location";
 import axios from "axios";
 import RNPickerSelect from "react-native-picker-select";
 import { BASE_URL } from "../../constants";
+import { LocationGeocodedAddress } from "expo-location";
 
 const CameraScreen = () => {
   const [permission, requestPermission] = useCameraPermissions();
@@ -32,10 +32,44 @@ const CameraScreen = () => {
   const [picture, setPicture] = useState<string | undefined>();
   const [photoType, setPhotoType] = useState("");
   const camera = useRef<CameraView>(null);
-
+  const [address, setAddress] = useState<LocationGeocodedAddress | null>(null);
+  const getAddressFromCoords = async (latitude: number, longitude: number) => {
+    try {
+      const addresses = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      });
+      if (addresses.length > 0) {
+        setAddress(addresses[0]);
+      }
+    } catch (error) {
+      console.error("Error getting address:", error);
+    }
+  };
   const checkPermissions = async () => {
     setIsLoadingLocation(true);
     try {
+      // Check if location services are enabled
+      const enabled = await Location.hasServicesEnabledAsync();
+      if (!enabled) {
+        Alert.alert(
+          "Location Required",
+          "Location services are disabled. Please enable them in your device settings.",
+          [
+            {
+              text: "Request Again",
+              onPress: checkPermissions,
+            },
+            {
+              text: "Exit App",
+              onPress: () => BackHandler.exitApp(),
+              style: "cancel",
+            },
+          ]
+        );
+        return;
+      }
+
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
@@ -58,30 +92,30 @@ const CameraScreen = () => {
       }
 
       setLocationPermission(true);
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Highest,
-      }).catch((error) => {
-        console.error("Error getting location:", error);
-        Alert.alert(
-          "Location Error",
-          "Unable to get your location. Would you like to try again?",
-          [
-            {
-              text: "Retry",
-              onPress: checkPermissions,
-            },
-            {
-              text: "Cancel",
-              style: "cancel",
-            },
-          ]
-        );
-        return null;
-      });
 
-      if (location) {
-        setLocation(location);
-      }
+      // Start watching position
+      const locationSubscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.Highest,
+          distanceInterval: 1, // Update every 1 meter
+          timeInterval: 1000, // Update every 1 second
+        },
+        (newLocation) => {
+          setLocation(newLocation);
+          getAddressFromCoords(
+            newLocation.coords.latitude,
+            newLocation.coords.longitude
+          );
+          setIsLoadingLocation(false);
+        }
+      );
+
+      // Return cleanup function
+      return () => {
+        if (locationSubscription) {
+          locationSubscription.remove();
+        }
+      };
     } catch (error) {
       console.error("Error getting location:", error);
       Alert.alert(
@@ -106,7 +140,10 @@ const CameraScreen = () => {
     if (permission && !permission.granted && permission.canAskAgain) {
       requestPermission();
     }
-    checkPermissions();
+    const cleanup = checkPermissions();
+    return () => {
+      cleanup?.then((cleanupFn) => cleanupFn?.());
+    };
   }, [permission]);
   // Remove the second useEffect that was fetching location
   useEffect(() => {
@@ -137,6 +174,9 @@ const CameraScreen = () => {
       formData.append("longitude", location.coords.longitude.toString());
     }
     formData.append("timestamp", Date.now().toString());
+    if (address?.formattedAddress) {
+      formData.append("address", address.formattedAddress);
+    }
     try {
       // Use your device's IP address instead of localhost
       setLoading(true);
@@ -191,7 +231,7 @@ const CameraScreen = () => {
       console.error("Error saving file:", error);
     }
   };
-
+  console.log(address);
   if (isLoadingLocation) {
     return (
       <View style={styles.loadingContainer}>
@@ -211,6 +251,7 @@ const CameraScreen = () => {
       </View>
     );
   }
+  // Update the location overlay in the picture preview
   if (picture) {
     return (
       <View style={{ flex: 1 }}>
@@ -229,6 +270,11 @@ const CameraScreen = () => {
                 <Text style={styles.locationText}>
                   Long: {location.coords.longitude.toFixed(6)}
                 </Text>
+                {address && (
+                  <Text style={styles.locationText}>
+                    {address?.formattedAddress}
+                  </Text>
+                )}
               </View>
             )
           )}
