@@ -174,9 +174,9 @@ const CameraScreen = () => {
       formData.append("longitude", location.coords.longitude.toString());
     }
     formData.append("timestamp", Date.now().toString());
-    if (address?.formattedAddress) {
-      formData.append("address", address.formattedAddress);
-    }
+
+    formData.append("address", address?.formattedAddress || "k");
+
     try {
       // Use your device's IP address instead of localhost
       setLoading(true);
