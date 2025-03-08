@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -39,6 +38,7 @@ interface AttendanceRecord {
   longitude: number;
   timestamp: string;
   photoType: string;
+  address: string;
   user: User;
   createdAt: string;
   updatedAt: string;
@@ -119,6 +119,7 @@ const Page = () => {
                 <TableHead>Organization</TableHead>
                 <TableHead>Photo Type</TableHead>
                 <TableHead>Timestamp</TableHead>
+                <TableHead>Address</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Photo</TableHead>
               </TableRow>
@@ -143,10 +144,13 @@ const Page = () => {
                         : "N/A"}
                     </TableCell>
                     <TableCell>
+                      {record.address ? `${record.address}` : "N/A"}
+                    </TableCell>
+                    <TableCell>
                       {record.img ? (
                         <div className="flex items-center gap-2">
                           <div
-                            className="relative w-12 h-12 cursor-pointer"
+                            className="relative w-12 h-12 cursor-pointer group"
                             onClick={() => setSelectedImage(record.img)}
                           >
                             <Image
@@ -155,16 +159,23 @@ const Page = () => {
                               className="object-cover rounded-md"
                               fill
                             />
+                            <div className="absolute hidden group-hover:block bg-black bg-opacity-75 text-white p-2 rounded-md -top-24 left-0 w-48 text-xs z-10">
+                              <p>
+                                <strong>Name:</strong> {record.user?.fullName}
+                              </p>
+                              <p>
+                                <strong>Time:</strong>{" "}
+                                {format(new Date(record.timestamp), "PPpp")}
+                              </p>
+                              <p>
+                                <strong>Type:</strong> {record.photoType}
+                              </p>
+                              <p>
+                                <strong>Location:</strong> {record.latitude},{" "}
+                                {record.longitude}
+                              </p>
+                            </div>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              window.open(`${BASE_URL}/${record.img}`, "_blank")
-                            }
-                          >
-                            View Photo
-                          </Button>
                         </div>
                       ) : (
                         "No photo"
@@ -190,6 +201,24 @@ const Page = () => {
               width={1000}
               height={1000}
             />
+            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white p-4 text-sm">
+              {attendanceData.map((record) =>
+                record.img === selectedImage ? (
+                  <div key={record._id}>
+                    <p className="text-lg mb-2">{record.user?.fullName}</p>
+                    <p>Organization: {record.user?.organization?.name}</p>
+                    <p>Time: {format(new Date(record.timestamp), "PPpp")}</p>
+                    <p>Type: {record.photoType}</p>
+                    <p>
+                      Location: {record.latitude}, {record.longitude}
+                    </p>
+                    <p>
+                      Address: {record.address ? `${record.address}` : "N/A"}
+                    </p>
+                  </div>
+                ) : null
+              )}
+            </div>
             <button
               className="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2"
               onClick={() => setSelectedImage(null)}
@@ -199,71 +228,6 @@ const Page = () => {
           </div>
         </div>
       )}
-
-      <div className="rounded-md border">
-        <Table className="bg-amber-50">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Organization</TableHead>
-              <TableHead>Photo Type</TableHead>
-              <TableHead>Timestamp</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Photo</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {attendanceData &&
-              filteredData.map((record) => (
-                <TableRow key={record._id}>
-                  <TableCell>{record.user?.fullName || "N/A"}</TableCell>
-                  <TableCell>
-                    {record.user?.organization?.name || "N/A"}
-                  </TableCell>
-                  <TableCell>{record.photoType || "N/A"}</TableCell>
-                  <TableCell>
-                    {record.timestamp
-                      ? format(new Date(record.timestamp), "PPpp")
-                      : "N/A"}
-                  </TableCell>
-                  <TableCell>
-                    {record.latitude && record.longitude
-                      ? `${record.latitude}, ${record.longitude}`
-                      : "N/A"}
-                  </TableCell>
-                  <TableCell>
-                    {record.img ? (
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="relative w-12 h-12 cursor-pointer"
-                          onClick={() => setSelectedImage(record.img)}
-                        >
-                          <Image
-                            src={`${BASE_URL}/${record.img}`}
-                            alt="Thumbnail"
-                            className="object-cover rounded-md"
-                            fill
-                          />
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            window.open(`${BASE_URL}/${record.img}`, "_blank")
-                          }
-                        >
-                          View Photo
-                        </Button>
-                      </div>
-                    ) : (
-                      "No photo"
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </div>
     </div>
   );
 };

@@ -87,11 +87,13 @@ const getPhotosByType = asyncHandler(async (req, res) => {
   }
 
   const parsedDate = new Date(startDate);
+  console.log(parsedDate);
   const photos = await Photo.find({
     user: userId,
     photoType: type,
     timestamp: {
       $gte: parsedDate,
+      $lte: parsedDate,
     },
   })
     .sort({ timestamp: -1 })
