@@ -152,7 +152,7 @@ const Page = () => {
           <div className="bg-white rounded w-48">
             <Select value={selectedUser} onValueChange={setSelectedUser}>
               <SelectTrigger disabled={isLoading} className="w-full">
-                <SelectValue placeholder="Select an NGO" />
+                <SelectValue placeholder="Select an Employee" />
               </SelectTrigger>
               <SelectContent>
                 {user &&

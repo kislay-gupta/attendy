@@ -17,6 +17,7 @@ import useLoader from "@/hooks/use-loader";
 import Loader from "@/components/shared/Loader";
 import { useAuth } from "@/hooks/use-auth";
 import { Calendar } from "@/components/ui/calendar";
+import Image from "next/image";
 
 // Update the User interface to match the response
 interface Organization {
@@ -46,6 +47,7 @@ interface AttendanceRecord {
 const Page = () => {
   const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const { isLoading, startLoading, stopLoading } = useLoader();
@@ -107,6 +109,7 @@ const Page = () => {
             />
           </div>
         </div>
+        {/* Add this state near other state declarations */}
 
         <div className="rounded-md border">
           <Table className="bg-amber-50">
@@ -124,31 +127,142 @@ const Page = () => {
               {attendanceData &&
                 filteredData.map((record) => (
                   <TableRow key={record._id}>
-                    <TableCell>{record.user.fullName}</TableCell>
-                    <TableCell>{record.user.organization.name}</TableCell>
-                    <TableCell>{record.photoType}</TableCell>
+                    <TableCell>{record.user?.fullName || "N/A"}</TableCell>
                     <TableCell>
-                      {format(new Date(record.timestamp), "PPpp")}
+                      {record.user?.organization?.name || "N/A"}
+                    </TableCell>
+                    <TableCell>{record.photoType || "N/A"}</TableCell>
+                    <TableCell>
+                      {record.timestamp
+                        ? format(new Date(record.timestamp), "PPpp")
+                        : "N/A"}
                     </TableCell>
                     <TableCell>
-                      {record.latitude}, {record.longitude}
+                      {record.latitude && record.longitude
+                        ? `${record.latitude}, ${record.longitude}`
+                        : "N/A"}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          window.open(`${BASE_URL}/${record.img}`, "_blank")
-                        }
-                      >
-                        View Photo
-                      </Button>
+                      {record.img ? (
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="relative w-12 h-12 cursor-pointer"
+                            onClick={() => setSelectedImage(record.img)}
+                          >
+                            <Image
+                              src={`${BASE_URL}/${record.img}`}
+                              alt="Thumbnail"
+                              className="object-cover rounded-md"
+                              fill
+                            />
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              window.open(`${BASE_URL}/${record.img}`, "_blank")
+                            }
+                          >
+                            View Photo
+                          </Button>
+                        </div>
+                      ) : (
+                        "No photo"
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
             </TableBody>
           </Table>
         </div>
+      </div>
+      {/* Add the lightbox component */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full">
+            <Image
+              src={`${BASE_URL}/${selectedImage}`}
+              alt="Preview"
+              className="object-contain w-full h-full"
+              width={1000}
+              height={1000}
+            />
+            <button
+              className="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2"
+              onClick={() => setSelectedImage(null)}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="rounded-md border">
+        <Table className="bg-amber-50">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Organization</TableHead>
+              <TableHead>Photo Type</TableHead>
+              <TableHead>Timestamp</TableHead>
+              <TableHead>Location</TableHead>
+              <TableHead>Photo</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {attendanceData &&
+              filteredData.map((record) => (
+                <TableRow key={record._id}>
+                  <TableCell>{record.user?.fullName || "N/A"}</TableCell>
+                  <TableCell>
+                    {record.user?.organization?.name || "N/A"}
+                  </TableCell>
+                  <TableCell>{record.photoType || "N/A"}</TableCell>
+                  <TableCell>
+                    {record.timestamp
+                      ? format(new Date(record.timestamp), "PPpp")
+                      : "N/A"}
+                  </TableCell>
+                  <TableCell>
+                    {record.latitude && record.longitude
+                      ? `${record.latitude}, ${record.longitude}`
+                      : "N/A"}
+                  </TableCell>
+                  <TableCell>
+                    {record.img ? (
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="relative w-12 h-12 cursor-pointer"
+                          onClick={() => setSelectedImage(record.img)}
+                        >
+                          <Image
+                            src={`${BASE_URL}/${record.img}`}
+                            alt="Thumbnail"
+                            className="object-cover rounded-md"
+                            fill
+                          />
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            window.open(`${BASE_URL}/${record.img}`, "_blank")
+                          }
+                        >
+                          View Photo
+                        </Button>
+                      </div>
+                    ) : (
+                      "No photo"
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
