@@ -11,8 +11,9 @@ interface PhotoData {
   createdAt: string;
   img: string;
   latitude: number;
+  address: string;
   longitude: number;
-  photoType: "Punch In" | "Punch Out";
+  photoType: "Punch In" | "Punch Out" | "Duty";
   timestamp: string;
   updatedAt: string;
   user: string;
@@ -63,7 +64,11 @@ export default function ImageScreen() {
               Time: {new Date(photo.timestamp).toLocaleString()}
             </Text>
             <Text style={styles.overlayText}>
-              Location: {photo.latitude.toFixed(6)}, {photo.longitude.toFixed(6)}
+              Location: {photo.latitude.toFixed(6)},{" "}
+              {photo.longitude.toFixed(6)}
+            </Text>
+            <Text style={styles.overlayText}>
+              Address: {photo.address ? <>{photo.address}</> : <>N/A</>},{" "}
             </Text>
           </View>
         )}
@@ -79,7 +84,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     flex: 1,
-    position: 'relative',
+    position: "relative",
   },
   image: {
     flex: 1,
@@ -87,15 +92,15 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   overlay: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 20,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
     padding: 15,
   },
   overlayText: {
-    color: 'white',
+    color: "white",
     fontSize: 14,
     marginBottom: 5,
   },

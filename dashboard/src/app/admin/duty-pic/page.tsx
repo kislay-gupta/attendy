@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Image from "next/image";
 
 interface Organization {
   _id: string;
@@ -58,6 +59,8 @@ interface DutyPhoto {
 
 const Page = () => {
   const [dutyPhotos, setDutyPhotos] = useState<DutyPhoto[]>([]);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
   const { isLoading, startLoading, stopLoading } = useLoader();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [user, setUser] = useState<User[]>();
@@ -190,7 +193,6 @@ const Page = () => {
                   <TableCell>{photo.user.fullName}</TableCell>
                   <TableCell>{photo.photoType}</TableCell>
                   <TableCell>{photo.user?.organization?.name}</TableCell>
-
                   <TableCell>
                     {format(new Date(photo.timestamp), "PPpp")}
                   </TableCell>
@@ -198,15 +200,23 @@ const Page = () => {
                     {photo.latitude}, {photo.longitude}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        window.open(`${BASE_URL}/${photo.img}`, "_blank")
-                      }
-                    >
-                      View Photo
-                    </Button>
+                    {photo.img ? (
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="relative w-12 h-12 cursor-pointer group"
+                          onClick={() => setSelectedImage(photo.img)}
+                        >
+                          <Image
+                            src={`${BASE_URL}/${photo.img}`}
+                            alt="Thumbnail"
+                            className="object-cover rounded-md"
+                            fill
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      "No photo"
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -214,6 +224,47 @@ const Page = () => {
           </Table>
         </div>
       </div>
+
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full">
+            <Image
+              src={`${BASE_URL}/${selectedImage}`}
+              alt="Preview"
+              className="object-contain w-full h-full"
+              width={1000}
+              height={1000}
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white p-4 text-sm">
+              {dutyPhotos.map((photo) =>
+                photo.img === selectedImage ? (
+                  <div key={photo._id}>
+                    <p className="text-lg mb-2">{photo.user?.fullName}</p>
+                    <p>Organization: {photo.user?.organization?.name}</p>
+                    <p>Time: {format(new Date(photo.timestamp), "PPpp")}</p>
+                    <p>Type: {photo.photoType}</p>
+                    <p>
+                      Location: {photo.latitude}, {photo.longitude}
+                    </p>
+                  </div>
+                ) : null
+              )}
+            </div>
+            <button
+              className="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedImage(null);
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

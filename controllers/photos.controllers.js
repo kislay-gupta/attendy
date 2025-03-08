@@ -75,37 +75,35 @@ const getSinglePhoto = asyncHandler(async (req, res) => {
 });
 const getPhotosByType = asyncHandler(async (req, res) => {
   const { type, userId, startDate } = req.query;
+
   if (!["Punch In", "Punch Out", "Duty"].includes(type)) {
-    res.status(400).json(new ApiResponse(400, [], "Invalid photo type"));
     throw new ApiError(400, "Invalid photo type");
   }
+
   if (!userId || !startDate) {
-    res
-      .status(400)
-      .json(new ApiResponse(400, [], "User ID and start date are required"));
     throw new ApiError(400, "User ID and start date are required");
   }
-
-  const parsedDate = new Date(startDate);
-  console.log(parsedDate);
+  const queryDate = new Date(startDate);
+  // Set end of day time (23:59:59.999)
+  const endDate = new Date(queryDate);
+  endDate.setHours(23, 59, 59, 999);
   const photos = await Photo.find({
     user: userId,
     photoType: type,
     timestamp: {
-      $gte: parsedDate,
-      $lte: parsedDate,
+      $gte: queryDate,
+      $lte: endDate,
     },
   })
     .sort({ timestamp: -1 })
     .populate({
       path: "user",
-      select: "fullName", // Select only the fullName of the user
+      select: "fullName",
       populate: {
         path: "organization",
-        select: "name", // Select only the name of the organization
+        select: "name",
       },
     });
-
   return res
     .status(200)
     .json(
@@ -157,10 +155,15 @@ const getPhotosByDateRange = asyncHandler(async (req, res) => {
     res.status(400).json(new ApiResponse(400, [], "Start date is required"));
     throw new ApiError(400, "Start date and end date are required");
   }
+  const queryDate = new Date(startDate);
 
+  const endDate = new Date(queryDate);
+  endDate.setHours(23, 59, 59, 999);
   const photos = await Photo.find({
+    photoType: "Punch In",
     timestamp: {
-      $gte: new Date(startDate),
+      $gte: queryDate,
+      $lte: endDate,
     },
   })
     .sort({ timestamp: -1 })

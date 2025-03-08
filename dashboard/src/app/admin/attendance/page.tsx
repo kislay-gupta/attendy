@@ -159,22 +159,6 @@ const Page = () => {
                               className="object-cover rounded-md"
                               fill
                             />
-                            <div className="absolute hidden group-hover:block bg-black bg-opacity-75 text-white p-2 rounded-md -top-24 left-0 w-48 text-xs z-10">
-                              <p>
-                                <strong>Name:</strong> {record.user?.fullName}
-                              </p>
-                              <p>
-                                <strong>Time:</strong>{" "}
-                                {format(new Date(record.timestamp), "PPpp")}
-                              </p>
-                              <p>
-                                <strong>Type:</strong> {record.photoType}
-                              </p>
-                              <p>
-                                <strong>Location:</strong> {record.latitude},{" "}
-                                {record.longitude}
-                              </p>
-                            </div>
                           </div>
                         </div>
                       ) : (

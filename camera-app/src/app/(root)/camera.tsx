@@ -93,29 +93,18 @@ const CameraScreen = () => {
 
       setLocationPermission(true);
 
-      // Start watching position
-      const locationSubscription = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.Highest,
-          distanceInterval: 1, // Update every 1 meter
-          timeInterval: 1000, // Update every 1 second
-        },
-        (newLocation) => {
-          setLocation(newLocation);
-          getAddressFromCoords(
-            newLocation.coords.latitude,
-            newLocation.coords.longitude
-          );
-          setIsLoadingLocation(false);
-        }
+      // Get current position instead of watching
+      const currentLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Highest,
+      });
+      
+      setLocation(currentLocation);
+      await getAddressFromCoords(
+        currentLocation.coords.latitude,
+        currentLocation.coords.longitude
       );
+      setIsLoadingLocation(false);
 
-      // Return cleanup function
-      return () => {
-        if (locationSubscription) {
-          locationSubscription.remove();
-        }
-      };
     } catch (error) {
       console.error("Error getting location:", error);
       Alert.alert(
@@ -140,25 +129,22 @@ const CameraScreen = () => {
     if (permission && !permission.granted && permission.canAskAgain) {
       requestPermission();
     }
-    const cleanup = checkPermissions();
-    return () => {
-      cleanup?.then((cleanupFn) => cleanupFn?.());
-    };
+    checkPermissions();
   }, [permission]);
-  // Remove the second useEffect that was fetching location
-  useEffect(() => {
-    (async () => {
-      setIsLoadingLocation(true);
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === "granted") {
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Highest,
-        });
-        setLocation(location);
-      }
-      setIsLoadingLocation(false);
-    })();
-  }, []);
+  // Remove this useEffect
+  // useEffect(() => {
+  //   (async () => {
+  //     setIsLoadingLocation(true);
+  //     const { status } = await Location.requestForegroundPermissionsAsync();
+  //     if (status === "granted") {
+  //       const location = await Location.getCurrentPositionAsync({
+  //         accuracy: Location.Accuracy.Highest,
+  //       });
+  //       setLocation(location);
+  //     }
+  //     setIsLoadingLocation(false);
+  //   })();
+  // }, []);
 
   const UploadImage = async (picture: string) => {
     const formData = new FormData();
@@ -232,7 +218,7 @@ const CameraScreen = () => {
     }
   };
   console.log(address);
-  if (isLoadingLocation) {
+  if (isLoadingLocation || !location) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#005055" />
