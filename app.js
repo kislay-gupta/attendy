@@ -31,7 +31,9 @@ app.get("/", (req, res) => {
 import photoRoutes from "./routes/photos.routes.js";
 import userRoutes from "./routes/users.routes.js";
 import orgRoutes from "./routes/organizations.routes.js";
+import attendanceRoutes from "./routes/attendance.routes.js";
 app.use("/api/v1/upload", photoRoutes);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/org", orgRoutes);
+app.use("/api/v1/attendance", attendanceRoutes);
 export { app };

@@ -51,6 +51,11 @@ const registerUser = asyncHandler(async (req, res) => {
     $or: [{ email }, { mobileNo }],
   });
   if (existedUser) {
+    res
+      .status(409)
+      .json(
+        new ApiResponse(409, {}, "User with email or mobile already exists")
+      );
     throw new ApiError(409, "User with email or mobile already exists");
   }
   const avatar = req.file?.path;
@@ -113,8 +118,20 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "Current user details"));
 });
 
+const getCurrentUserById = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const user = await User.findById(userId)
+    .select("-password -refreshToken")
+    .populate("organization", "_id name");
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Current user details"));
+});
+
 const getAllUser = asyncHandler(async (req, res) => {
-  const user = await User.find()
+  const user = await User.find({
+    role: "USER",
+  })
     .select("-password -refreshToken")
     .populate("organization");
   return res
@@ -277,6 +294,7 @@ export {
   registerUser,
   loginUser,
   getCurrentUser,
+  getCurrentUserById,
   getAllUser,
   logoutUser,
   refreshAccessToken,

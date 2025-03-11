@@ -10,11 +10,16 @@ import {
   UserPlus,
   Calendar,
   Clock,
+  Eye,
 } from "lucide-react";
 import { BASE_URL } from "@/constant";
 import axios from "axios";
 import { useAuth } from "@/hooks/use-auth";
-import { NGODATA } from "@/types";
+import { NGODATA, User } from "@/types";
+import { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
+import { DataTable } from "@/components/shared/DataTable";
+import Hint from "@/components/shared/Hint";
 
 // Mock data for demonstration
 const mockEmployees = [
@@ -53,25 +58,60 @@ const NGODetailsPage = () => {
   useEffect(() => {
     getNGOSDetails();
   }, [ngoId]);
+  console.log(ngoDetails);
   // Filter employees based on search term
-  const filteredEmployees = mockEmployees.filter(
-    (employee) =>
-      employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.designation.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Present":
-        return "bg-green-100 text-green-800";
-      case "Absent":
-        return "bg-red-100 text-red-800";
-      case "Late":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  // const getStatusColor = (status: string) => {
+  //   switch (status) {
+  //     case "Present":
+  //       return "bg-green-100 text-green-800";
+  //     case "Absent":
+  //       return "bg-red-100 text-red-800";
+  //     case "Late":
+  //       return "bg-yellow-100 text-yellow-800";
+  //     default:
+  //       return "bg-gray-100 text-gray-800";
+  //   }
+  // };
+  const columns: ColumnDef<User>[] = [
+    {
+      header: "Image",
+      accessorKey: "avatar",
+      cell: ({ row }) => {
+        return (
+          <div className="w-12 h-12 overflow-hidden rounded-full">
+            <Image
+              alt={row.original.fullName}
+              src={`${BASE_URL}/${row.original.avatar}`}
+              height={48}
+              width={48}
+              className="object-cover w-full h-full"
+            />
+          </div>
+        );
+      },
+    },
+    {
+      header: "Name",
+      accessorKey: "fullName",
+    },
+    {
+      header: "Actions",
+      cell: ({ row }) => {
+        return (
+          <div className="flex items-center">
+            <Button variant="link" asChild>
+              <Hint label="view" side="top">
+                <Link target="_blank" href={`/admin/user/${row.original._id}`}>
+                  <Eye size={16} />
+                </Link>
+              </Hint>
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -188,39 +228,9 @@ const NGODetailsPage = () => {
             </div>
           </div>
           <ul className="divide-y divide-gray-200">
-            {filteredEmployees.map((employee) => (
-              <li key={employee.id} className="hover:bg-gray-50">
-                <Link href={`/admin/employee/${employee.id}`}>
-                  <div className="w-full px-6 py-4 flex items-center justify-between text-left">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-600">
-                          {employee.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </span>
-                      </div>
-                      <div className="ml-4">
-                        <h3 className="text-md font-medium text-gray-900">
-                          {employee.name}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {employee.designation}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      <span
-                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(employee.status)}`}
-                      >
-                        {employee.status}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              </li>
-            ))}
+            {ngoDetails && (
+              <DataTable columns={columns} data={ngoDetails.users} />
+            )}
           </ul>
         </div>
       </main>

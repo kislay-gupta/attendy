@@ -43,6 +43,10 @@ const organizationSchema = new Schema(
       ],
       required: true,
     },
+    leaves: {
+      type: Number,
+      default: 0,
+    },
     holidays: {
       type: [Date],
       default: [],

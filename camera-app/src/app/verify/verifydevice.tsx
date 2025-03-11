@@ -1,4 +1,12 @@
-import { View, Text, Pressable, Modal, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  Modal,
+  ActivityIndicator,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import React, { useState } from "react";
 import * as Device from "expo-device";
 import axios from "axios";
@@ -49,47 +57,23 @@ export default function VerifyDevice() {
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: "#F0F0F0",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
+    <View style={styles.container}>
       <View>
-        <Pressable
+        <TouchableOpacity
           onPress={handleVerification}
-          style={{
-            backgroundColor: "#005055",
-            paddingHorizontal: 24,
-            paddingVertical: 12,
-            borderRadius: 8,
-            elevation: 3,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-          }}
+          style={styles.verifyButton}
         >
-          <Text
-            style={{
-              color: "white",
-              flexDirection: "row",
-              fontSize: 16,
-              fontWeight: "600",
-            }}
-          >
+          <Text style={styles.buttonText}>
             {!isLoading ? (
               <>Verify Device</>
             ) : (
               <>
-                <ActivityIndicator size="large" color="#005055" />
+                <ActivityIndicator size="large" color="#ffffff" />
                 verifying...
               </>
             )}
           </Text>
-        </Pressable>
+        </TouchableOpacity>
       </View>
 
       <Modal
@@ -98,40 +82,16 @@ export default function VerifyDevice() {
         visible={showError}
         onRequestClose={() => setShowError(false)}
       >
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "rgba(0,0,0,0.5)",
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: "white",
-              padding: 20,
-              borderRadius: 10,
-              alignItems: "center",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.25,
-              shadowRadius: 4,
-              elevation: 5,
-            }}
-          >
-            <Text style={{ fontSize: 16, marginBottom: 15 }}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>
               Verification failed. Please try again.
             </Text>
             <Pressable
               onPress={() => setShowError(false)}
-              style={{
-                backgroundColor: "#005055",
-                paddingHorizontal: 20,
-                paddingVertical: 10,
-                borderRadius: 5,
-              }}
+              style={styles.modalButton}
             >
-              <Text style={{ color: "white" }}>OK</Text>
+              <Text style={styles.modalButtonText}>OK</Text>
             </Pressable>
           </View>
         </View>
@@ -139,3 +99,65 @@ export default function VerifyDevice() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F0F0F0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  verifyButton: {
+    backgroundColor: "#005055",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    minWidth: 280,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  modalButton: {
+    backgroundColor: "#005055",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+    minWidth: 100,
+    alignItems: "center",
+  },
+  modalButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+});

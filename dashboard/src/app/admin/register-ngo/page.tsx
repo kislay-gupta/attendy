@@ -3,15 +3,40 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Loader2, Upload } from "lucide-react"; // Add Check import
+import { ArrowLeft, Loader2, Upload } from "lucide-react";
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { BASE_URL } from "@/constant";
 import useLoader from "@/hooks/use-loader";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+// Define the form schema with zod
+const formSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  logo: z.any().optional(),
+  workingDays: z.array(z.string()).min(1, "Select at least one working day"),
+  morningAttendanceDeadline: z.string(),
+  eveningAttendanceStartTime: z.string(),
+  leaves: z.any(),
+});
+
+// Derive TypeScript type from the zod schema
+type FormValues = z.infer<typeof formSchema>;
 
 const RegisterNGO = () => {
   const workingDaysOptions = [
@@ -24,39 +49,37 @@ const RegisterNGO = () => {
     "Sunday",
   ];
 
-  // Add steps array after workingDaysOptions
+  // Steps for the multi-step form
   const steps = [
     { number: 1, title: "Basic Info" },
     { number: 2, title: "Location" },
     { number: 3, title: "Schedule" },
   ];
 
-  interface FormData {
-    name: string;
-    description: string;
-    logo: File | null;
-
-    workingDays: string[];
-    morningAttendanceDeadline: string;
-    eveningAttendanceStartTime: string;
-  }
-
-  const [formData, setFormData] = useState<FormData>({
-    name: "",
-    description: "",
-    logo: null,
-
-    workingDays: [],
-    morningAttendanceDeadline: "09:30",
-    eveningAttendanceStartTime: "17:00",
+  // Initialize the form with shadcn/ui Form
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      logo: null,
+      workingDays: [],
+      morningAttendanceDeadline: "09:30",
+      eveningAttendanceStartTime: "17:00",
+      leaves: 0,
+    },
   });
+
   const { startLoading, stopLoading, isLoading } = useLoader();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const { token } = useAuth();
+  const [currentStep, setCurrentStep] = useState(0);
+
+  // Handle logo upload
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData({ ...formData, logo: file });
+      form.setValue("logo", file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -65,39 +88,41 @@ const RegisterNGO = () => {
     }
   };
 
-  const [currentStep, setCurrentStep] = useState(0);
-
+  // Navigation functions
   const nextStep = () => {
-    if (currentStep < 3) setCurrentStep(currentStep + 1);
+    if (currentStep < 2) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
     if (currentStep > 0) setCurrentStep(currentStep - 1);
   };
-  const handleSubmit = async () => {
+
+  // Form submission handler
+  const onSubmit = async (values: FormValues) => {
     startLoading();
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append("name", formData.name);
-      formDataToSend.append("description", formData.description);
-      if (formData.logo) {
-        formDataToSend.append("logo", formData.logo);
+      formDataToSend.append("name", values.name);
+      formDataToSend.append("description", values.description);
+
+      if (values.logo) {
+        formDataToSend.append("logo", values.logo);
       }
 
-      // Update this part - send working days as individual elements
-      formData.workingDays.forEach((day, index) => {
+      // Add working days
+      values.workingDays.forEach((day, index) => {
         formDataToSend.append(`workingDays[${index}]`, day);
       });
 
       formDataToSend.append(
         "morningAttendanceDeadline",
-        formData.morningAttendanceDeadline
+        values.morningAttendanceDeadline
       );
       formDataToSend.append(
         "eveningAttendanceStartTime",
-        formData.eveningAttendanceStartTime
+        values.eveningAttendanceStartTime
       );
-
+      formDataToSend.append("leaves", values.leaves);
       const response = await axios.post(
         `${BASE_URL}/api/v1/org`,
         formDataToSend,
@@ -108,25 +133,24 @@ const RegisterNGO = () => {
           },
         }
       );
+
       setImagePreview(null);
       toast.success(response.data.message);
-      setFormData({
-        name: "",
-        description: "",
-        logo: null,
-        workingDays: [],
-        morningAttendanceDeadline: "09:30",
-        eveningAttendanceStartTime: "17:00",
-      });
+      form.reset();
       setCurrentStep(0);
     } catch (error) {
-      console.log(error);
-      toast.error((error as Error).message);
+      console.error(error);
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data.message || "An error occurred");
+      } else {
+        toast.error("An unexpected error occurred");
+      }
     } finally {
       stopLoading();
     }
   };
-  // Add this before the return statement
+
+  // Step progress indicator
   const renderStepCounter = () => {
     return (
       <div className="mb-8">
@@ -163,6 +187,19 @@ const RegisterNGO = () => {
     );
   };
 
+  // Handle validation and next step navigation
+  const handleStepValidation = async () => {
+    if (currentStep === 0) {
+      // Validate the name field before proceeding
+      const nameValid = await form.trigger("name");
+      if (nameValid) nextStep();
+    } else if (currentStep === 1) {
+      // Validate the description field before proceeding
+      const descriptionValid = await form.trigger("description");
+      if (descriptionValid) nextStep();
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -196,204 +233,224 @@ const RegisterNGO = () => {
 
           {renderStepCounter()}
 
-          <AnimatePresence mode="wait">
-            {currentStep === 0 && (
-              <motion.div
-                key="step1"
-                initial={{ x: 20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -20, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-6"
-              >
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    NGO Name
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    NGO Logo
-                  </label>
-                  {/* Update the file input section */}
-                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                    <div className="space-y-1 text-center">
-                      {imagePreview ? (
-                        <div className="mb-4">
-                          <img
-                            src={imagePreview}
-                            alt="Logo preview"
-                            className="mx-auto h-32 w-32 object-cover rounded-md"
-                          />
-                        </div>
-                      ) : (
-                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <AnimatePresence mode="wait">
+                {currentStep === 0 && (
+                  <motion.div
+                    key="step1"
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -20, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-6"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>NGO Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
                       )}
-                      <div className="flex text-sm text-gray-600">
-                        <label
-                          htmlFor="logo-upload"
-                          className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500"
-                        >
-                          <span>Upload a file</span>
-                          <input
-                            id="logo-upload"
-                            name="logo-upload"
-                            type="file"
-                            className="sr-only"
-                            accept="image/*"
-                            onChange={handleLogoUpload}
-                          />
-                        </label>
-                      </div>
-                      <p className="text-xs text-gray-500">
-                        PNG, JPG, GIF up to 10MB
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                    />
 
-                <div></div>
-              </motion.div>
-            )}
-
-            {currentStep === 1 && (
-              <motion.div
-                key="step2"
-                initial={{ x: 20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -20, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-6"
-              >
-                <div className="grid grid-cols-1 gap-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-              </motion.div>
-            )}
-
-            {currentStep === 2 && (
-              <motion.div
-                key="step3"
-                initial={{ x: 20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -20, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-6"
-              >
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Working Days
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 mb-6">
-                    {workingDaysOptions.map((day) => (
-                      <div key={day} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={day}
-                          checked={formData.workingDays.includes(day)}
-                          onCheckedChange={(checked) => {
-                            setFormData((prev) => ({
-                              ...prev,
-                              workingDays: checked
-                                ? [...prev.workingDays, day]
-                                : prev.workingDays.filter((d) => d !== day),
-                            }));
-                          }}
-                        />
-                        <label
-                          htmlFor={day}
-                          className="text-sm font-medium leading-none"
-                        >
-                          {day}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Morning Attendance Deadline
-                      </label>
-                      <Input
-                        type="time"
-                        value={formData.morningAttendanceDeadline}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            morningAttendanceDeadline: e.target.value,
-                          })
-                        }
-                        required
-                      />
+                      <FormLabel>NGO Logo</FormLabel>
+                      <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                        <div className="space-y-1 text-center">
+                          {imagePreview ? (
+                            <div className="mb-4">
+                              <img
+                                src={imagePreview}
+                                alt="Logo preview"
+                                className="mx-auto h-32 w-32 object-cover rounded-md"
+                              />
+                            </div>
+                          ) : (
+                            <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                          )}
+                          <div className="flex text-sm text-gray-600">
+                            <label
+                              htmlFor="logo-upload"
+                              className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500"
+                            >
+                              <span>Upload a file</span>
+                              <input
+                                id="logo-upload"
+                                name="logo-upload"
+                                type="file"
+                                className="sr-only"
+                                accept="image/*"
+                                onChange={handleLogoUpload}
+                              />
+                            </label>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            PNG, JPG, GIF up to 10MB
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Evening Attendance Start Time
-                      </label>
-                      <Input
-                        type="time"
-                        value={formData.eveningAttendanceStartTime}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            eveningAttendanceStartTime: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <div className="flex justify-between mt-6">
-            {currentStep > 0 && (
-              <Button
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4"
-                onClick={prevStep}
-              >
-                Previous
-              </Button>
-            )}
-            {currentStep < 2 ? (
-              <Button
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4"
-                onClick={nextStep}
-              >
-                Next
-              </Button>
-            ) : (
-              <Button onClick={handleSubmit} disabled={isLoading} type="submit">
-                {isLoading ? (
-                  <span>
-                    <Loader2 className="animate-spin" />
-                  </span>
-                ) : (
-                  <>Submit</>
+                  </motion.div>
                 )}
-              </Button>
-            )}
-          </div>
+
+                {currentStep === 1 && (
+                  <motion.div
+                    key="step2"
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -20, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-6"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
+                )}
+
+                {currentStep === 2 && (
+                  <motion.div
+                    key="step3"
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -20, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-6"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="workingDays"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Working Days</FormLabel>
+                          <div className="grid grid-cols-2 gap-2 mb-6">
+                            {workingDaysOptions.map((day) => (
+                              <div
+                                key={day}
+                                className="flex items-center space-x-2"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(day)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        field.onChange([...field.value, day]);
+                                      } else {
+                                        field.onChange(
+                                          field.value?.filter(
+                                            (value) => value !== day
+                                          )
+                                        );
+                                      }
+                                    }}
+                                  />
+                                </FormControl>
+                                <label
+                                  htmlFor={day}
+                                  className="text-sm font-medium leading-none"
+                                >
+                                  {day}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="morningAttendanceDeadline"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Morning Attendance Deadline</FormLabel>
+                            <FormControl>
+                              <Input type="time" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="eveningAttendanceStartTime"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Evening Attendance Start Time</FormLabel>
+                            <FormControl>
+                              <Input type="time" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="leaves"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Number of leaves</FormLabel>
+                          <FormControl>
+                            <Input type="number" pattern="[0-9]*" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="flex justify-between mt-6">
+                {currentStep > 0 && (
+                  <Button
+                    type="button"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4"
+                    onClick={prevStep}
+                  >
+                    Previous
+                  </Button>
+                )}
+                {currentStep < 2 ? (
+                  <Button
+                    type="button"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4"
+                    onClick={handleStepValidation}
+                  >
+                    Next
+                  </Button>
+                ) : (
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      "Submit"
+                    )}
+                  </Button>
+                )}
+              </div>
+            </form>
+          </Form>
         </motion.div>
       </div>
     </motion.div>

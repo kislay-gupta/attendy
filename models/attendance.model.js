@@ -16,44 +16,24 @@ const attendanceSchema = new Schema(
       ref: "Organization",
       required: true,
     },
-    checkInTime: {
-      type: Date,
-      required: true,
-    },
-    checkOutTime: {
-      type: Date,
-    },
-    checkInPhoto: {
-      type: String,
-      required: true,
-    },
-    checkOutPhoto: {
-      type: String,
-    },
+    checkInTime: Date,
+    checkOutTime: Date,
+    checkInPhoto: String,
+    checkOutPhoto: String,
     checkInLocation: {
-      latitude: {
-        type: Number,
-        required: true,
-      },
-      longitude: {
-        type: Number,
-        required: true,
-      },
+      latitude: Number,
+      longitude: Number,
     },
     checkOutLocation: {
-      latitude: {
-        type: Number,
-      },
-      longitude: {
-        type: Number,
-      },
+      latitude: Number,
+      longitude: Number,
     },
     status: {
       type: String,
-      enum: ["PRESENT", "ABSENT"],
+      enum: ["PRESENT", "LATE", "ABSENT"],
       default: "PRESENT",
     },
   },
   { timestamps: true }
 );
-const Attendance = mongoose.model("Attendance", attendanceSchema);
+export const Attendance = mongoose.model("Attendance", attendanceSchema);

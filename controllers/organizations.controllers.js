@@ -7,7 +7,7 @@ const registerOrganization = asyncHandler(async (req, res) => {
   const {
     name,
     description,
-
+    leaves,
     workingDays,
     morningAttendanceDeadline,
     eveningAttendanceStartTime,
@@ -17,6 +17,9 @@ const registerOrganization = asyncHandler(async (req, res) => {
 
   // Validate required fields
   if (!name || !description || !logo || !workingDays) {
+    res
+      .status(400)
+      .json(new ApiResponse(400, null, "All required fields must be provided"));
     throw new ApiError(400, "All required fields must be provided");
   }
 
@@ -29,6 +32,11 @@ const registerOrganization = asyncHandler(async (req, res) => {
 
   const existingOrganization = await Organization.findOne({ name });
   if (existingOrganization) {
+    res
+      .status(409)
+      .json(
+        new ApiResponse(409, null, "Organization with this name already exists")
+      );
     throw new ApiError(409, "Organization with this name already exists");
   }
 
@@ -36,7 +44,7 @@ const registerOrganization = asyncHandler(async (req, res) => {
     name,
     description,
     logo,
-
+    leaves,
     workingDays: processedWorkingDays,
     morningAttendanceDeadline: morningAttendanceDeadline || "09:30",
     eveningAttendanceStartTime: eveningAttendanceStartTime || "17:00",
@@ -53,8 +61,11 @@ const registerOrganization = asyncHandler(async (req, res) => {
 const getOrganization = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const organization = await Organization.findById(id).populate("users");
+  const organization = await Organization.findById(id)
+    .populate("users")
+    .select("-refreshToken -password");
   if (!organization) {
+    res.status(404).json(new ApiResponse(404, null, "Organization not found"));
     throw new ApiError(404, "Organization not found");
   }
 

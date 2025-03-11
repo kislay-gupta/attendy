@@ -19,8 +19,8 @@ import Loader from "@/components/shared/Loader";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/shared/DataTable";
 import Hint from "@/components/shared/Hint";
-import { ConfirmModal } from "@/components/shared/ConfirmModal";
 import { toast } from "sonner";
+import DeleteModal from "@/components/modals/DeleteModal";
 
 // Mock data for demonstration
 interface NGODATA {
@@ -92,8 +92,8 @@ const AdminDashboard = () => {
               </Link>
             </div>
             <div className="my-auto">
-              <ConfirmModal
-                variant="delete"
+              <DeleteModal
+                project_name={row.original.name}
                 onConfirm={() => {
                   deleteNgo(row.original._id);
                 }}
@@ -104,7 +104,7 @@ const AdminDashboard = () => {
                     <Trash2 size={16} />
                   </Hint>
                 </Button>
-              </ConfirmModal>
+              </DeleteModal>
             </div>
           </div>
         );

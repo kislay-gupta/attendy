@@ -2,9 +2,14 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { Photo } from "../models/photo.model.js";
+import { Attendance } from "../models/attendance.model.js";
+import { User } from "../models/user.model.js";
 import mongoose from "mongoose";
 const uploadPhoto = asyncHandler(async (req, res) => {
   const { latitude, longitude, photoType, timestamp, address } = req.body;
+
+  // Convert Unix timestamp to Date object
+  const photoDate = new Date(Number(timestamp));
 
   if (!latitude || !longitude || !photoType) {
     throw new ApiError(400, "Latitude, longitude and photoType are required");
@@ -24,10 +29,56 @@ const uploadPhoto = asyncHandler(async (req, res) => {
       latitude,
       longitude,
       photoType,
-      timestamp,
+      timestamp: photoDate,
       address,
       user: req.user._id,
     });
+
+    if (photoType === "Punch In") {
+      try {
+        const user = await User.findById(req.user._id).populate("organization");
+        const org = user.organization;
+
+        const [deadlineHours, deadlineMinutes] = org.morningAttendanceDeadline
+          .split(":")
+          .map(Number);
+
+        // Create deadline date using the same day as photo
+        const attendanceDate = new Date(photoDate);
+        attendanceDate.setHours(deadlineHours, deadlineMinutes, 0, 0);
+
+        // Calculate grace period end (15 mins after deadline)
+        const gracePeriodEnd = new Date(
+          attendanceDate.getTime() + 15 * 60 * 1000
+        );
+
+        // Determine status
+        let status = "ABSENT";
+        if (photoDate <= attendanceDate) {
+          status = "PRESENT";
+        } else if (photoDate <= gracePeriodEnd) {
+          status = "LATE";
+        }
+
+        await Attendance.findOneAndUpdate(
+          { user: user._id, date: attendanceDate },
+          {
+            $set: {
+              checkInTime: photoDate,
+              checkInPhoto: req.file.path,
+              checkInLocation: { latitude, longitude },
+              organization: org._id,
+              status,
+              date: attendanceDate,
+              user: user._id,
+            },
+          },
+          { upsert: true, new: true }
+        );
+      } catch (error) {
+        console.error("Attendance update error:", error);
+      }
+    }
 
     return res
       .status(201)
@@ -149,7 +200,7 @@ const getUserPhotosByType = asyncHandler(async (req, res) => {
 });
 
 const getPhotosByDateRange = asyncHandler(async (req, res) => {
-  const { startDate } = req.query;
+  const { startDate, photoType } = req.query;
 
   if (!startDate) {
     res.status(400).json(new ApiResponse(400, [], "Start date is required"));
@@ -160,7 +211,7 @@ const getPhotosByDateRange = asyncHandler(async (req, res) => {
   const endDate = new Date(queryDate);
   endDate.setHours(23, 59, 59, 999);
   const photos = await Photo.find({
-    photoType: "Punch In",
+    photoType,
     timestamp: {
       $gte: queryDate,
       $lte: endDate,
@@ -188,12 +239,16 @@ const getUserPhotosByDateRange = asyncHandler(async (req, res) => {
     res.status(400).json(new ApiResponse(400, [], "Start date is required"));
     throw new ApiError(400, "Start date and end date are required");
   }
+  const queryDate = new Date(startDate);
 
+  const endDate = new Date(queryDate);
+  endDate.setHours(23, 59, 59, 999);
   const photos = await Photo.find({
     user: req.user._id,
 
     timestamp: {
-      $gte: new Date(startDate),
+      $gte: queryDate,
+      $lte: endDate,
     },
   })
     .sort({ timestamp: -1 })
@@ -218,5 +273,6 @@ export {
   getPhotosByType,
   getPhotosByDateRange,
   getAllPhotos,
+  getUserPhotosByType,
   getUserPhotosByDateRange,
 };

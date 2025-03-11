@@ -12,3 +12,28 @@ export interface NGODATA {
   updatedAt: string; // ISO date string
   __v: number;
 }
+
+export interface DeviceInfo {
+  deviceManufacture: string;
+  deviceModel: string;
+  _id: string;
+}
+
+export interface User {
+  _id: string;
+  username: string;
+  email: string;
+  mobileNo: string;
+  fullName: string;
+  avatar: string;
+  designation: string;
+  password: string;
+  deviceInfo: DeviceInfo;
+  isVerified: boolean;
+  role: "USER" | "ADMIN"; // Using union type for role
+  organization: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  refreshToken?: string; // Made optional since it might not always be present
+}
