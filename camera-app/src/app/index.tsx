@@ -1,7 +1,7 @@
 import { View, Text, ActivityIndicator } from "react-native";
 
 import { Redirect } from "expo-router";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 export default function SignupScreen() {
   const { isAuthenticated } = useAuth();
 

@@ -4,7 +4,7 @@ import { Attendance } from "./models/attendance.model.js"; // Missing import
 import { User } from "./models/user.model.js";
 
 // Runs daily at 04:20 UTC (9:50 AM IST)
-export const task = cron.schedule("0 12 * * *", async () => {
+export const task = cron.schedule("20 4 * * *", async () => {
   try {
     console.log("Running attendance cron job at", new Date().toISOString());
 

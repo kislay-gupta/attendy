@@ -11,10 +11,10 @@ import React, { useState } from "react";
 import * as Device from "expo-device";
 import axios from "axios";
 import { BASE_URL } from "../../constants";
-import CustomAlert from "../../components/CustomAlert";
-import { useAuth } from "../../hooks/useAuth";
+import CustomAlert from "@/components/CustomAlert";
+import { useAuth } from "@/hooks/useAuth";
 import { router } from "expo-router";
-import useLoader from "../../hooks/use-loader";
+import useLoader from "@/hooks/use-loader";
 
 export default function VerifyDevice() {
   const [showError, setShowError] = useState(false);

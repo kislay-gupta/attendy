@@ -10,11 +10,11 @@ import {
 import React, { useCallback, useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
-import useLoader from "../../hooks/use-loader";
+import useLoader from "@/hooks/use-loader";
 import axios from "axios";
-import { BASE_URL } from "../../constants/";
-import { useAuth } from "../../hooks/useAuth";
-import Loader from "../../components/Loader";
+import { BASE_URL } from "@/constants/";
+import { useAuth } from "@/hooks/useAuth";
+import Loader from "@/components/Loader";
 import { format } from "date-fns";
 
 export default function ProfileScreen() {

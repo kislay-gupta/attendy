@@ -19,7 +19,7 @@ import type { LocationObject } from "expo-location";
 import * as Location from "expo-location";
 import axios from "axios";
 import RNPickerSelect from "react-native-picker-select";
-import { BASE_URL } from "../../constants";
+import { BASE_URL } from "@/constants";
 import { LocationGeocodedAddress } from "expo-location";
 
 const CameraScreen = () => {
@@ -97,14 +97,13 @@ const CameraScreen = () => {
       const currentLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Highest,
       });
-      
+
       setLocation(currentLocation);
       await getAddressFromCoords(
         currentLocation.coords.latitude,
         currentLocation.coords.longitude
       );
       setIsLoadingLocation(false);
-
     } catch (error) {
       console.error("Error getting location:", error);
       Alert.alert(

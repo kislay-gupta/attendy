@@ -7,19 +7,19 @@ import {
   Animated,
   Image,
 } from "react-native";
-import CustomTextInput from "../components/CustomInput";
+import CustomTextInput from "@/components/CustomInput";
 import { router } from "expo-router";
 import { FormProvider, useForm } from "react-hook-form";
 import axios from "axios";
-import { BASE_URL } from "../constants";
+import { BASE_URL } from "@/constants";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import useLoader from "../hooks/use-loader";
-import { useAuth } from "../hooks/useAuth";
+import useLoader from "@/hooks/use-loader";
+import { useAuth } from "@/hooks/useAuth";
 import { Ionicons } from "@expo/vector-icons";
 import { AxiosError } from "axios";
-import CustomAlert from "../components/CustomAlert";
-import Loader from "../components/Loader";
+import CustomAlert from "@/components/CustomAlert";
+import Loader from "@/components/Loader";
 import logo from "../../assets/icon.png";
 import { StatusBar } from "expo-status-bar";
 const LoginScreen = () => {

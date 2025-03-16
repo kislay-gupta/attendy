@@ -11,13 +11,13 @@ import {
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, router, useFocusEffect } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import { MediaType } from "../../utils/media";
+import { MediaType } from "@/utils/media";
 import * as Network from "expo-network";
 import axios from "axios";
-import { BASE_URL } from "../../constants";
-import { useAuth } from "../../hooks/useAuth";
-import useLoader from "../../hooks/use-loader";
-import Loader from "../../components/Loader";
+import { BASE_URL } from "@/constants";
+import { useAuth } from "@/hooks/useAuth";
+import useLoader from "@/hooks/use-loader";
+import Loader from "@/components/Loader";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { format, parseISO } from "date-fns";
 

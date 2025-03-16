@@ -1,10 +1,10 @@
 import { View, Image, StyleSheet, Text } from "react-native";
 import { Tabs, useFocusEffect, useLocalSearchParams } from "expo-router";
 import axios from "axios";
-import { BASE_URL } from "../../constants";
+import { BASE_URL } from "@/constants";
 import { useCallback, useState } from "react";
-import useLoader from "../../hooks/use-loader";
-import Loader from "../../components/Loader";
+import useLoader from "@/hooks/use-loader";
+import Loader from "@/components/Loader";
 
 interface PhotoData {
   _id: string;
