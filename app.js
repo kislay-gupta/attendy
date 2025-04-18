@@ -1,9 +1,10 @@
-import express from "express";
+import express, { response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
-
+import { logger } from "./utils/logger.js";
+import morgan from "morgan";
 const app = express();
 app.use(
   cors({
@@ -14,6 +15,11 @@ app.use(
 // middlewares
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const morganFormat =
+  ":method :url :status :res[content-length] - :response-time ms";
+app.get("/", (req, res) => {
+  res.send("API is working");
+});
 app.use("/public", express.static(path.join(__dirname, "public")));
 
 app.use(express.json({ limit: "16kb" }));
@@ -21,11 +27,21 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
-
-app.get("/", (req, res) => {
-  res.send("API is working");
-});
-
+app.use(
+  morgan(morganFormat, {
+    stream: {
+      write: (message) => {
+        const logObject = {
+          method: message.split(" ")[0],
+          url: message.split(" ")[1],
+          status: message.split(" ")[2],
+          responseTime: message.split(" ")[3],
+        };
+        logger.info(JSON.stringify(logObject));
+      },
+    },
+  })
+);
 // routes
 
 import photoRoutes from "./routes/photos.routes.js";

@@ -16,11 +16,10 @@ router.route("/register").post(upload.single("avatar"), registerUser);
 router.route("/login").post(loginUser);
 
 // protected routes
-router.route("/").get(verifyJWT, getCurrentUser);
-router.route("/:userId").get(verifyJWT, getCurrentUserById);
-
 router.route("/all").get(verifyJWT, getAllUser);
 router.route("/verify").post(verifyJWT, verifyDevice);
 router.route("/logout").post(verifyJWT, logoutUser);
+router.route("/").get(verifyJWT, getCurrentUser);
+router.route("/:userId").get(verifyJWT, getCurrentUserById);
 
 export default router;

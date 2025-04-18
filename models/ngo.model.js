@@ -44,8 +44,14 @@ const organizationSchema = new Schema(
       required: true,
     },
     leaves: {
-      type: Number,
-      default: 0,
+      privilegeLeave: {
+        type: Number,
+        required: true,
+      },
+      otherLeave: {
+        type: Number,
+        required: true,
+      },
     },
     holidays: {
       type: [Date],

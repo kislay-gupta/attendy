@@ -7,7 +7,8 @@ const registerOrganization = asyncHandler(async (req, res) => {
   const {
     name,
     description,
-    leaves,
+    privilegeLeave,
+    otherLeave,
     workingDays,
     morningAttendanceDeadline,
     eveningAttendanceStartTime,
@@ -44,7 +45,10 @@ const registerOrganization = asyncHandler(async (req, res) => {
     name,
     description,
     logo,
-    leaves,
+    leaves: {
+      privilegeLeave,
+      otherLeave,
+    },
     workingDays: processedWorkingDays,
     morningAttendanceDeadline: morningAttendanceDeadline || "09:30",
     eveningAttendanceStartTime: eveningAttendanceStartTime || "17:00",
@@ -122,7 +126,10 @@ const getAllOrganizations = asyncHandler(async (req, res) => {
 
 const addUserToOrganization = asyncHandler(async (req, res) => {
   const { organizationId, userId } = req.body;
-
+  if (!organizationId || !userId) {
+    throw new ApiError(400, "All fields are required");
+    res.status(400).json(new ApiResponse(400, null, "All fields are required"));
+  }
   const organization = await Organization.findByIdAndUpdate(
     organizationId,
     { $addToSet: { users: userId } },

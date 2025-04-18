@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "@/components/ui/sonner";
+import ReactQueryProvider from "@/providers/ReactQuery";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -28,10 +29,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NextTopLoader />
+        <ReactQueryProvider>
+          <NextTopLoader />
 
-        {children}
-        <Toaster position="top-right" closeButton />
+          {children}
+          <Toaster position="top-right" closeButton />
+        </ReactQueryProvider>
       </body>
     </html>
   );

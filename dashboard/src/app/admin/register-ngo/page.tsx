@@ -32,7 +32,8 @@ const formSchema = z.object({
   workingDays: z.array(z.string()).min(1, "Select at least one working day"),
   morningAttendanceDeadline: z.string(),
   eveningAttendanceStartTime: z.string(),
-  leaves: z.any(),
+  privilegeLeave: z.number().min(0, "Must be a positive number"),
+  otherLeave: z.number().min(0, "Must be a positive number"),
 });
 
 // Derive TypeScript type from the zod schema
@@ -54,6 +55,7 @@ const RegisterNGO = () => {
     { number: 1, title: "Basic Info" },
     { number: 2, title: "Location" },
     { number: 3, title: "Schedule" },
+    { number: 4, title: "Leaves" },
   ];
 
   // Initialize the form with shadcn/ui Form
@@ -66,7 +68,8 @@ const RegisterNGO = () => {
       workingDays: [],
       morningAttendanceDeadline: "09:30",
       eveningAttendanceStartTime: "17:00",
-      leaves: 0,
+      privilegeLeave: 0,
+      otherLeave: 0,
     },
   });
 
@@ -89,8 +92,9 @@ const RegisterNGO = () => {
   };
 
   // Navigation functions
+  // Fix the nextStep function
   const nextStep = () => {
-    if (currentStep < 2) setCurrentStep(currentStep + 1);
+    if (currentStep < 3) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
@@ -122,7 +126,8 @@ const RegisterNGO = () => {
         "eveningAttendanceStartTime",
         values.eveningAttendanceStartTime
       );
-      formDataToSend.append("leaves", values.leaves);
+      formDataToSend.append("privilegeLeave", values.privilegeLeave.toString());
+      formDataToSend.append("otherLeave", values.otherLeave.toString());
       const response = await axios.post(
         `${BASE_URL}/api/v1/org`,
         formDataToSend,
@@ -190,16 +195,20 @@ const RegisterNGO = () => {
   // Handle validation and next step navigation
   const handleStepValidation = async () => {
     if (currentStep === 0) {
-      // Validate the name field before proceeding
       const nameValid = await form.trigger("name");
       if (nameValid) nextStep();
     } else if (currentStep === 1) {
-      // Validate the description field before proceeding
       const descriptionValid = await form.trigger("description");
       if (descriptionValid) nextStep();
+    } else if (currentStep === 2) {
+      const workingDaysValid = await form.trigger("workingDays");
+      const morningTimeValid = await form.trigger("morningAttendanceDeadline");
+      const eveningTimeValid = await form.trigger("eveningAttendanceStartTime");
+      if (workingDaysValid && morningTimeValid && eveningTimeValid) nextStep();
+    } else {
+      nextStep();
     }
   };
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -339,7 +348,7 @@ const RegisterNGO = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Working Days</FormLabel>
-                          <div className="grid grid-cols-2 gap-2 mb-6">
+                          <div className="grid grid-cols-3 gap-2 mb-6">
                             {workingDaysOptions.map((day) => (
                               <div
                                 key={day}
@@ -375,7 +384,7 @@ const RegisterNGO = () => {
                       )}
                     />
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
                         name="morningAttendanceDeadline"
@@ -389,13 +398,25 @@ const RegisterNGO = () => {
                           </FormItem>
                         )}
                       />
-
+                      <FormField
+                        control={form.control}
+                        name="morningAttendanceDeadline"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Grace Period Deadline</FormLabel>
+                            <FormControl>
+                              <Input type="time" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       <FormField
                         control={form.control}
                         name="eveningAttendanceStartTime"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Evening Attendance Start Time</FormLabel>
+                            <FormLabel>Punch Out Start Time</FormLabel>
                             <FormControl>
                               <Input type="time" {...field} />
                             </FormControl>
@@ -404,19 +425,61 @@ const RegisterNGO = () => {
                         )}
                       />
                     </div>
-                    <FormField
-                      control={form.control}
-                      name="leaves"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Number of leaves</FormLabel>
-                          <FormControl>
-                            <Input type="number" pattern="[0-9]*" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  </motion.div>
+                )}
+
+                {currentStep === 3 && (
+                  <motion.div
+                    key="step4"
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -20, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-6"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="privilegeLeave"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Privilege Leave</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="0"
+                                {...field}
+                                onChange={(e) =>
+                                  field.onChange(Number(e.target.value))
+                                }
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="otherLeave"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Other Leave</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="0"
+                                {...field}
+                                onChange={(e) =>
+                                  field.onChange(Number(e.target.value))
+                                }
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -431,7 +494,7 @@ const RegisterNGO = () => {
                     Previous
                   </Button>
                 )}
-                {currentStep < 2 ? (
+                {currentStep < 3 ? (
                   <Button
                     type="button"
                     className="bg-indigo-600 hover:bg-indigo-700 text-white px-4"

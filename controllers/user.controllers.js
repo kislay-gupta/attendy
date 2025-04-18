@@ -62,7 +62,10 @@ const registerUser = asyncHandler(async (req, res) => {
   if (!avatar) {
     throw new ApiError(400, "Avatar file is required");
   }
-
+  const org = Organization.findById(organization);
+  if (!org) {
+    throw new ApiError(404, "NGO Not found");
+  }
   const createdUserName = fullName.slice(0, 2) + mobileNo.slice(8, 10);
   try {
     const user = await User.create({
@@ -129,14 +132,10 @@ const getCurrentUserById = asyncHandler(async (req, res) => {
 });
 
 const getAllUser = asyncHandler(async (req, res) => {
-  const user = await User.find({
-    role: "USER",
-  })
+  const user = await User.find({ role: "USER" })
     .select("-password -refreshToken")
     .populate("organization");
-  return res
-    .status(200)
-    .json(new ApiResponse(200, user, "Current user details"));
+  return res.status(200).json(new ApiResponse(200, user, " all user details"));
 });
 
 const loginUser = asyncHandler(async (req, res) => {

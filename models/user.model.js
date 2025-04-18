@@ -55,6 +55,14 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    leaves: {
+      privilegeLeave: {
+        type: Number,
+      },
+      otherLeave: {
+        type: Number,
+      },
+    },
     role: {
       type: String,
       enum: ["USER", "ADMIN"],
