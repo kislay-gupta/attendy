@@ -68,7 +68,7 @@ export const useAuth = () => {
   };
 
   const isAuthenticated = Boolean(token);
-
+  console.log({ isAuthenticated, token, isLoading, cookies });
   return {
     token,
     saveToken,
