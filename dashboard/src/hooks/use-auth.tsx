@@ -6,7 +6,7 @@ import Cookies from "universal-cookie";
 export const useAuth = () => {
   const cookies = new Cookies();
   const COOKIE_NAME = "accessToken";
-  const [token, setToken] = useState<string | null>(null); // Initialize with null
+  const [token, setToken] = useState<string | null>(); // Initialize with null
   const [isLoading, setIsLoading] = useState(true); // Add loading state
 
   useEffect(() => {

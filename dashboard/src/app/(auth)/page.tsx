@@ -95,6 +95,7 @@ const Login = () => {
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
                   required
                   className="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200"
                   placeholder="Enter your password"
