@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
-import { redirect } from "next/navigation";
+// import { redirect } from "next/navigation";
 import { useEffect } from "react";
 import Loader from "./shared/Loader";
 
@@ -18,7 +18,8 @@ export default function AdminRoute({ children }: AdminRouteProps) {
       console.log(res, "res from admin route");
 
       if (!isLoading && !isAuthenticated) {
-        redirect("/");
+        // redirect("/");
+        console.log("Not authenticated, redirecting to login page");
       }
     };
 
