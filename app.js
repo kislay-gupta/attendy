@@ -6,16 +6,37 @@ import { fileURLToPath } from "url";
 import { logger } from "./utils/logger.js";
 import morgan from "morgan";
 const app = express();
+
+const allowedOrigins = [
+  "https://mnc.iistbihar.com",
+  "https://k4soswsc0okwcckgggw8c4kg.iistbihar.com",
+  "http://localhost:3000",
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "https://mnc.iistbihar.com/",
-      "https://k4soswsc0okwcckgggw8c4kg.iistbihar.com",
-    ],
+    origin: function (origin, callback) {
+      // Allow server-to-server requests (no origin)
+      if (!origin) return callback(null, true);
+
+      // Check if origin is allowed
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".iistbihar.com")
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS policy violation"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    exposedHeaders: ["Content-Range", "X-Content-Range"],
+    maxAge: 600, // Cache preflight response for 10 minutes
   })
 );
+
 // middlewares
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
