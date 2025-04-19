@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { Organization } from "../models/ngo.model.js";
+import jwt from "jsonwebtoken";
 const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -289,12 +290,28 @@ const verifyDevice = asyncHandler(async (req, res) => {
   }
 });
 
+const verifySession = asyncHandler(async (req, res) => {
+  const token = req.cookies.accessToken;
+
+  if (!token) {
+    return res.status(401).json({ authenticated: false });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    return res.json({ authenticated: true, user: decoded });
+  } catch (error) {
+    return res.status(402).json({ authenticated: false });
+  }
+});
+
 export {
   registerUser,
   loginUser,
   getCurrentUser,
   getCurrentUserById,
   getAllUser,
+  verifySession,
   logoutUser,
   refreshAccessToken,
   changeCurrentPassword,

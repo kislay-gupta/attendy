@@ -14,7 +14,6 @@ import Link from "next/link";
 import axios from "axios";
 import { BASE_URL } from "@/constant";
 import useLoader from "@/hooks/use-loader";
-import { useAuth } from "@/hooks/use-auth";
 import Loader from "@/components/shared/Loader";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/shared/DataTable";
@@ -31,7 +30,6 @@ interface NGODATA {
 const AdminDashboard = () => {
   const [ngoData, setNgoData] = useState<NGODATA[]>([]);
   const { startLoading, stopLoading, isLoading } = useLoader();
-  const { token } = useAuth();
   const getNGOS = async () => {
     startLoading();
     try {
@@ -52,9 +50,7 @@ const AdminDashboard = () => {
   const deleteNgo = async (id: string) => {
     try {
       const response = await axios.delete(`${BASE_URL}/api/v1/org/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        withCredentials: true,
       });
       toast.success(response.data.message);
       getNGOS();

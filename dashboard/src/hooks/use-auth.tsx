@@ -1,79 +1,145 @@
-"use client";
-import { getAuthCookie } from "@/actions/auth-actions";
-import { useEffect, useState } from "react";
-import Cookies from "universal-cookie";
+// hooks/use-auth.ts
+import { BASE_URL } from "@/constant";
+import { useState, useEffect, useCallback } from "react";
 
-export const useAuth = () => {
-  const cookies = new Cookies();
-  const COOKIE_NAME = "accessToken";
-  const [token, setToken] = useState<string | null>(); // Initialize with null
-  const [isLoading, setIsLoading] = useState(true); // Add loading state
+interface User {
+  userId: string;
+  email: string;
+  // Add other user properties as needed
+}
 
-  useEffect(() => {
-    const fetchToken = async () => {
-      try {
-        const fetchedToken = await getAuthCookie();
-        setToken(fetchedToken);
-        console.log("Token loaded:", fetchedToken); // Move console.log here
-      } catch (error) {
-        console.error("Error fetching token:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchToken();
-  }, []);
+interface AuthStatus {
+  authenticated: boolean;
+  user?: User;
+}
 
-  const saveToken = async (newToken: string | null) => {
+export function useAuth() {
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // API URL from environment variable
+  const API_URL = BASE_URL || "";
+
+  /**
+   * Check authentication status by verifying the accessToken cookie
+   */
+  const checkAuthStatus = useCallback(async (): Promise<AuthStatus> => {
     try {
-      if (!newToken) {
-        throw new Error("Token cannot be null or undefined");
-      }
-
-      cookies.set(COOKIE_NAME, newToken, {
-        path: "/",
-        maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
-        secure: true,
-        sameSite: "strict",
+      const response = await fetch(`${API_URL}/api/v1/user/verify-session`, {
+        method: "GET",
+        credentials: "include", // Important to include cookies
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
-      setToken(newToken);
-    } catch (error) {
-      console.error("Error saving token:", error);
-      throw error;
-    }
-  };
 
-  const loadToken = async () => {
-    try {
-      const storedToken = await getAuthCookie();
-      setToken(storedToken);
-      if (storedToken) {
-        console.log(storedToken, "storedToken");
-
-        return storedToken;
+      if (!response.ok) {
+        setIsAuthenticated(false);
+        setUser(null);
+        setIsLoading(false);
+        return { authenticated: false };
       }
-      return null;
+
+      const data = await response.json();
+
+      if (data.authenticated && data.user) {
+        setUser(data.user);
+        setIsAuthenticated(true);
+        setIsLoading(false);
+        return { authenticated: true, user: data.user };
+      } else {
+        setIsAuthenticated(false);
+        setUser(null);
+        setIsLoading(false);
+        return { authenticated: false };
+      }
     } catch (error) {
-      console.error("Error loading token:", error);
-      return null;
+      console.error("Authentication check failed:", error);
+      setIsAuthenticated(false);
+      setUser(null);
+      setIsLoading(false);
+      return { authenticated: false };
+    }
+  }, [API_URL]);
+
+  /**
+   * Login user and set HTTP-only cookie
+   */
+  const login = async (credentials: { username: string; password: string }) => {
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setUser(data.user);
+        setIsAuthenticated(true);
+        setIsLoading(false);
+        return { success: true, user: data.user };
+      } else {
+        setIsLoading(false);
+        return { success: false, message: data.message || "Login failed" };
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setIsLoading(false);
+      return { success: false, message: "Authentication service unavailable" };
     }
   };
 
-  const removeToken = async () => {
+  /**
+   * Logout user and clear HTTP-only cookie
+   */
+  const logout = async () => {
     try {
-      cookies.remove(COOKIE_NAME, { path: "/" });
-      setToken(null);
+      const response = await fetch(`${API_URL}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setUser(null);
+        setIsAuthenticated(false);
+        return { success: true };
+      } else {
+        return { success: false, message: data.message || "Logout failed" };
+      }
     } catch (error) {
-      console.error("Error removing token:", error);
+      console.error("Logout error:", error);
+      return { success: false, message: "Logout service unavailable" };
     }
   };
+
+  // Initial auth check when the hook is first used
+  useEffect(() => {
+    const initialAuthCheck = async () => {
+      await checkAuthStatus();
+    };
+
+    initialAuthCheck();
+  }, [checkAuthStatus]);
 
   return {
-    token,
-    saveToken,
-    loadToken,
-    removeToken,
-    isAuthenticated: Boolean(token),
-    isLoading, // Add loading state to return value
+    user,
+    isAuthenticated,
+    isLoading,
+    login,
+    logout,
+    checkAuthStatus,
   };
-};
+}

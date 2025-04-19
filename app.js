@@ -9,7 +9,7 @@ const app = express();
 
 const allowedOrigins = [
   "https://mnc.iistbihar.com",
-  "http://k4soswsc0okwcckgggw8c4kg.iistbihar.com",
+  "https://k4soswsc0okwcckgggw8c4kg.iistbihar.com",
   "http://localhost:3000",
 ];
 

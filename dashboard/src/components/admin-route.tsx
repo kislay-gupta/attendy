@@ -1,8 +1,9 @@
+// components/AdminRoute.tsx
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Loader from "./shared/Loader";
 
 interface AdminRouteProps {
@@ -10,34 +11,44 @@ interface AdminRouteProps {
 }
 
 export default function AdminRoute({ children }: AdminRouteProps) {
-  const { isAuthenticated, isLoading, loadToken } = useAuth();
+  const { isAuthenticated, isLoading, checkAuthStatus } = useAuth();
   const router = useRouter();
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const verifyAccess = async () => {
       try {
-        const token = await loadToken();
+        // Direct server verification of the HTTP-only cookie
+        const authStatus = await checkAuthStatus();
 
-        if (!token) {
+        if (!authStatus.authenticated) {
           router.replace("/");
         }
+
+        setAuthChecked(true);
       } catch (error) {
-        console.error("Auth check failed:", error);
+        console.error("Auth verification failed:", error);
         router.replace("/");
       }
     };
 
-    checkAuth();
-  }, []);
+    if (!isAuthenticated && !isLoading) {
+      verifyAccess();
+    } else if (isAuthenticated) {
+      setAuthChecked(true);
+    }
+  }, [isAuthenticated, isLoading, checkAuthStatus, router]);
 
-  if (isLoading) {
+  // Show loader while initial auth check is in progress
+  if (isLoading || !authChecked) {
     return <Loader />;
   }
 
+  // If not authenticated after checking, don't render children
   if (!isAuthenticated) {
-    router.replace("/");
-    return null;
+    return null; // Router redirect is already triggered in useEffect
   }
 
+  // User is authenticated, render protected content
   return <>{children}</>;
 }
