@@ -11,7 +11,7 @@ app.use(
     origin: [
       "http://localhost:3000",
       "https://mnc.iistbihar.com/",
-      "http://anotherdomain.com",
+      "https://k4soswsc0okwcckgggw8c4kg.iistbihar.com",
     ],
     credentials: true,
   })
