@@ -6,7 +6,6 @@ import { LogOut, User, ChevronLeft, ChevronRight } from "lucide-react";
 import { ConfirmModal } from "../shared/ConfirmModal";
 import axios from "axios";
 import { BASE_URL } from "@/constant";
-import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import useLoader from "@/hooks/use-loader";
@@ -20,7 +19,6 @@ interface NavbarProps {
 export function Navbar({ isCollapsed, toggleSidebar }: NavbarProps) {
   const router = useRouter();
   const { stopLoading, startLoading, isLoading } = useLoader();
-  const { token, removeToken } = useAuth();
   const handleLogOut = async () => {
     startLoading();
     try {
@@ -28,12 +26,10 @@ export function Navbar({ isCollapsed, toggleSidebar }: NavbarProps) {
         `${BASE_URL}/api/v1/user/logout`,
         {},
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          withCredentials: true,
         }
       );
-      await removeToken();
+
       toast.success(response.data.message || "Logged out successfully!");
       router.push("/");
     } catch (error) {

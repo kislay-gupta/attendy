@@ -14,7 +14,6 @@ import axios from "axios";
 import { format } from "date-fns";
 import useLoader from "@/hooks/use-loader";
 import Loader from "@/components/shared/Loader";
-import { useAuth } from "@/hooks/use-auth";
 import { CalendarIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -66,14 +65,11 @@ const Page = () => {
   const [user, setUser] = useState<User[]>();
   const [selectedUser, setSelectedUser] = useState("");
   const [open, setOpen] = useState(false);
-  const { token } = useAuth();
   const getUser = async () => {
     try {
       startLoading();
       const response = await axios.get(`${BASE_URL}/api/v1/user/all`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        withCredentials: true,
       });
       // Update to handle the new response structure
       setUser(response.data.data);
@@ -99,9 +95,7 @@ const Page = () => {
           userId: selectedUser,
         },
 
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        withCredentials: true,
       });
       // Update to handle the new response structure
       if (response.data.statusCode && Array.isArray(response.data.data)) {

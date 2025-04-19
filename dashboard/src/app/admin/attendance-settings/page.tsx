@@ -14,7 +14,7 @@ import {
 
 import { BASE_URL } from "@/constant";
 import axios from "axios";
-import { useAuth } from "@/hooks/use-auth";
+
 import { toast } from "sonner";
 import useLoader from "@/hooks/use-loader";
 import Loader from "@/components/shared/Loader";
@@ -31,7 +31,6 @@ const AttendanceSettings = () => {
   const [morningDeadline, setMorningDeadline] = useState("09:30");
   const [eveningStartTime, setEveningStartTime] = useState("17:00");
   const [ngoList, setNgoList] = useState<NGO[]>([]);
-  const { token } = useAuth();
   const { startLoading, stopLoading, isLoading } = useLoader();
   // Remove searchParams and ngo parameter
 
@@ -39,9 +38,7 @@ const AttendanceSettings = () => {
     startLoading();
     try {
       const response = await axios.get(`${BASE_URL}/api/v1/org`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        withCredentials: true,
       });
       setNgoList(response.data.data);
     } catch (error) {
@@ -66,9 +63,7 @@ const AttendanceSettings = () => {
           eveningAttendanceStartTime: eveningStartTime,
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          withCredentials: true,
         }
       );
       toast.success(

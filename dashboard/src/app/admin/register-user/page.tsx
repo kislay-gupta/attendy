@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/select";
 import axios from "axios";
 import { BASE_URL } from "@/constant";
-import { useAuth } from "@/hooks/use-auth";
 import useLoader from "@/hooks/use-loader";
 import Loader from "@/components/shared/Loader";
 import { toast } from "sonner";
@@ -51,7 +50,6 @@ type FormValues = z.infer<typeof formSchema>;
 
 const RegisterUser = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const { token } = useAuth();
   const [ngos, setNgos] = useState<NGODATA[]>([]);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const { isLoading, startLoading, stopLoading } = useLoader();
@@ -82,9 +80,7 @@ const RegisterUser = () => {
     setLoadNgo(true);
     try {
       const res = await axios.get(`${BASE_URL}/api/v1/org`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        withCredentials: true,
       });
       setNgos(res.data.data);
     } catch (error) {

@@ -14,7 +14,6 @@ import axios from "axios";
 import { format } from "date-fns";
 import useLoader from "@/hooks/use-loader";
 import Loader from "@/components/shared/Loader";
-import { useAuth } from "@/hooks/use-auth";
 import { Calendar } from "@/components/ui/calendar";
 import Image from "next/image";
 
@@ -51,7 +50,6 @@ const Page = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const { isLoading, startLoading, stopLoading } = useLoader();
-  const { token } = useAuth();
   const fetchAttendanceData = async () => {
     try {
       startLoading();
@@ -59,9 +57,7 @@ const Page = () => {
       const response = await axios.get(
         `${BASE_URL}/api/v1/upload/date-range/?startDate=${formattedDate}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          withCredentials: true,
         }
       );
       setAttendanceData(response.data.data);

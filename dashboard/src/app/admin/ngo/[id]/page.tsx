@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { BASE_URL } from "@/constant";
 import axios from "axios";
-import { useAuth } from "@/hooks/use-auth";
 import { NGODATA, User } from "@/types";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
@@ -37,7 +36,6 @@ const mockEmployees = [
 
 const NGODetailsPage = () => {
   const [ngoDetails, setNgoDetails] = useState<NGODATA>();
-  const { token } = useAuth();
   const params = useParams();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,9 +43,7 @@ const NGODetailsPage = () => {
   const getNGOSDetails = async () => {
     try {
       const res = await axios.get(`${BASE_URL}/api/v1/org/${ngoId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        withCredentials: true,
       });
       setNgoDetails(res.data.data);
     } catch (error) {

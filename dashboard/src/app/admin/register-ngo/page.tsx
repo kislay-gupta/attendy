@@ -10,7 +10,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios, { AxiosError } from "axios";
 import { BASE_URL } from "@/constant";
 import useLoader from "@/hooks/use-loader";
-import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -75,7 +74,6 @@ const RegisterNGO = () => {
 
   const { startLoading, stopLoading, isLoading } = useLoader();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const { token } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
 
   // Handle logo upload
@@ -132,8 +130,8 @@ const RegisterNGO = () => {
         `${BASE_URL}/api/v1/org`,
         formDataToSend,
         {
+          withCredentials: true,
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
         }
