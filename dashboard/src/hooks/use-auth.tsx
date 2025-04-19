@@ -1,5 +1,4 @@
 "use client";
-
 import { getAuthCookie } from "@/actions/auth-actions";
 import { useEffect, useState } from "react";
 import Cookies from "universal-cookie";
@@ -7,17 +6,17 @@ import Cookies from "universal-cookie";
 export const useAuth = () => {
   const cookies = new Cookies();
   const COOKIE_NAME = "accessToken";
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [token, setToken] = useState<string | null>(null); // Initialize with null
+  const [isLoading, setIsLoading] = useState(true); // Add loading state
 
   useEffect(() => {
     const fetchToken = async () => {
       try {
         const fetchedToken = await getAuthCookie();
         setToken(fetchedToken);
+        console.log("Token loaded:", fetchedToken); // Move console.log here
       } catch (error) {
         console.error("Error fetching token:", error);
-        setToken(null);
       } finally {
         setIsLoading(false);
       }
@@ -49,6 +48,8 @@ export const useAuth = () => {
       const storedToken = await getAuthCookie();
       setToken(storedToken);
       if (storedToken) {
+        console.log(storedToken, "storedToken");
+
         return storedToken;
       }
       return null;
@@ -67,14 +68,12 @@ export const useAuth = () => {
     }
   };
 
-  const isAuthenticated = Boolean(token);
-  console.log({ isAuthenticated, token, isLoading, cookies });
   return {
     token,
     saveToken,
     loadToken,
     removeToken,
-    isAuthenticated,
-    isLoading,
+    isAuthenticated: Boolean(token),
+    isLoading, // Add loading state to return value
   };
 };
