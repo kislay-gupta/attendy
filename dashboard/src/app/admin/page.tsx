@@ -36,9 +36,7 @@ const AdminDashboard = () => {
     startLoading();
     try {
       const response = await axios.get(`${BASE_URL}/api/v1/org`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        withCredentials: true,
       });
       setNgoData(response.data.data);
     } catch (error) {

@@ -6,12 +6,44 @@ import { fileURLToPath } from "url";
 import { logger } from "./utils/logger.js";
 import morgan from "morgan";
 const app = express();
+
+const allowedOrigins = [
+  // Production URLs
+  "https://mnc.iistbihar.com",
+  "https://app.mdh-ngo-connect.com", // Add your production app URL
+  "mdh-ngo-connect://", // For production mobile app deep linking
+
+  // Development URLs
+  ...(process.env.NODE_ENV === "development"
+    ? [
+        "http://localhost:3000",
+        "http://localhost:19000",
+        "exp://localhost:19000",
+        "http://localhost:19006",
+        "http://127.0.0.1:19000",
+        "exp://127.0.0.1:19000",
+      ]
+    : []),
+];
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 // middlewares
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

@@ -31,7 +31,7 @@ export interface User {
   deviceInfo: DeviceInfo;
   isVerified: boolean;
   role: "USER" | "ADMIN"; // Using union type for role
-  organization: string;
+  organization: NGODATA;
   createdAt: string;
   updatedAt: string;
   __v: number;

@@ -28,7 +28,7 @@ export async function setAuthCookie(token: string): Promise<AuthResponse> {
 export async function getAuthCookie(): Promise<string | null> {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
+    const token = cookieStore.get("accessToken")?.value;
     return token || null;
   } catch (error) {
     console.error("Error getting auth cookie:", error);

@@ -1,20 +1,37 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { getAuthCookie } from "@/actions/auth-actions";
+import { useEffect, useState } from "react";
 import Cookies from "universal-cookie";
 
 export const useAuth = () => {
   const cookies = new Cookies();
-  // Initialize state with the token from cookies
-  const [token, setToken] = useState<string | null>(
-    () => cookies.get("token") || null
-  );
+  const COOKIE_NAME = "accessToken";
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const fetchedToken = await getAuthCookie();
+        setToken(fetchedToken);
+      } catch (error) {
+        console.error("Error fetching token:", error);
+        setToken(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchToken();
+  }, []);
+
   const saveToken = async (newToken: string | null) => {
     try {
       if (!newToken) {
         throw new Error("Token cannot be null or undefined");
       }
-      // Set cookie with httpOnly flag, expires in 7 days
-      cookies.set("token", newToken, {
+
+      cookies.set(COOKIE_NAME, newToken, {
         path: "/",
         maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
         secure: true,
@@ -22,40 +39,42 @@ export const useAuth = () => {
       });
       setToken(newToken);
     } catch (error) {
-      console.log("Error saving token:", error);
+      console.error("Error saving token:", error);
       throw error;
     }
   };
+
   const loadToken = async () => {
     try {
-      const storedToken = cookies.get("token");
+      const storedToken = await getAuthCookie();
+      setToken(storedToken);
       if (storedToken) {
-        setToken(storedToken);
+        return storedToken;
       }
-      return storedToken;
+      return null;
     } catch (error) {
-      console.log("Error loading token:", error);
+      console.error("Error loading token:", error);
       return null;
     }
   };
+
   const removeToken = async () => {
     try {
-      cookies.remove("token", { path: "/" });
+      cookies.remove(COOKIE_NAME, { path: "/" });
       setToken(null);
     } catch (error) {
-      console.log("Error removing token:", error);
+      console.error("Error removing token:", error);
     }
   };
-  // We can remove this useEffect since we're initializing the state with the token
-  // useEffect(() => {
-  //   loadToken();
-  // }, []);
-  useEffect(() => {}, [token]);
+
+  const isAuthenticated = Boolean(token);
+
   return {
     token,
     saveToken,
     loadToken,
     removeToken,
-    isAuthenticated: Boolean(token),
+    isAuthenticated,
+    isLoading,
   };
 };

@@ -1,9 +1,12 @@
 "use client";
 import { DataTable } from "@/components/shared/DataTable";
 import Loader from "@/components/shared/Loader";
+import { Button } from "@/components/ui/button";
 import { useFetchAllUsers } from "@/hooks/use-user";
 import { User } from "@/types";
 import { ColumnDef } from "@tanstack/react-table";
+import { Eye } from "lucide-react";
+import Link from "next/link";
 import React from "react";
 
 const Page = () => {
@@ -32,12 +35,29 @@ const Page = () => {
       header: "Email",
     },
     {
-      accessorKey: "role",
-      header: "Role",
+      accessorKey: "organization.name",
+      header: "NGO",
     },
     {
-      accessorKey: "status",
-      header: "Status",
+      accessorKey: "_id",
+      header: "",
+      cell: ({ row }) => {
+        return (
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="btn btn-primary"
+              asChild
+            >
+              <Link href={`/admin/user/${row.original._id}`} target="_blank">
+                <Eye size={16} />
+              </Link>
+            </Button>
+            <button className="btn btn-error">Delete</button>
+          </div>
+        );
+      },
     },
   ];
   return (

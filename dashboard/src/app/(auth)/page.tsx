@@ -5,7 +5,6 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BASE_URL } from "@/constant";
 import axios from "axios";
-import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import useLoader from "@/hooks/use-loader";
@@ -18,7 +17,6 @@ const Login = () => {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const { startLoading, stopLoading, isLoading } = useLoader();
-  const { saveToken } = useAuth();
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -31,9 +29,12 @@ const Login = () => {
     try {
       const response = await axios.post(
         `${BASE_URL}/api/v1/user/login`,
-        formData
+        formData,
+        {
+          withCredentials: true,
+        }
       );
-      saveToken(response.data.data.accessToken);
+      // saveToken(response.data.data.accessToken);
       if (response.data.data.user.role === "ADMIN") {
         router.push("/admin");
       }
