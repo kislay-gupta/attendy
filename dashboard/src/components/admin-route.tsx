@@ -10,12 +10,19 @@ interface AdminRouteProps {
 }
 
 export default function AdminRoute({ children }: AdminRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, loadToken } = useAuth();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      redirect("/");
-    }
+    const fetchToken = async () => {
+      const res = await loadToken(); // Load the token when the component mounts
+      console.log(res, "res from admin route");
+
+      if (!isLoading && !isAuthenticated) {
+        redirect("/");
+      }
+    };
+
+    fetchToken();
   }, [isAuthenticated, isLoading]);
 
   // Show loading state while checking authentication
