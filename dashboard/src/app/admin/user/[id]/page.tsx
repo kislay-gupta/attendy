@@ -1,3 +1,4 @@
+import AttendanceCalender from "@/components/shared/AttendaceCalender";
 import UserCard from "@/components/user/UserCard";
 
 export default async function UserProfilePage({
@@ -8,8 +9,13 @@ export default async function UserProfilePage({
   const { id } = await params;
 
   return (
-    <div className="container mx-auto p-6">
-      <UserCard id={id} />
+    <div className="container flex  mx-auto p-6">
+      <div className="flex-3/4">
+        <UserCard id={id} />
+      </div>
+      <div className="flex-1/3">
+        <AttendanceCalender id={id} />
+      </div>
     </div>
   );
 }
