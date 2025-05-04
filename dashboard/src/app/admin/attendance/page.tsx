@@ -55,7 +55,7 @@ const Page = () => {
       startLoading();
       const formattedDate = date ? format(date, "yyyy-MM-dd") : "";
       const response = await axios.get(
-        `${BASE_URL}/api/v1/upload/date-range/?startDate=${formattedDate}`,
+        `${BASE_URL}/api/v1/upload/date-range/?startDate=${formattedDate}&photoType=Punch In`,
         {
           withCredentials: true,
         }
