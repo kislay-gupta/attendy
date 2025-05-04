@@ -7,7 +7,8 @@ import {
   Image,
   Button,
   Alert,
-  BackHandler, // Add this
+  BackHandler,
+  TextInput, // Add this
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { router, Tabs } from "expo-router";
@@ -32,6 +33,7 @@ const CameraScreen = () => {
   const [picture, setPicture] = useState<string | undefined>();
   const [photoType, setPhotoType] = useState("");
   const camera = useRef<CameraView>(null);
+  const [description, setDescription] = useState<string>("");
   const [address, setAddress] = useState<LocationGeocodedAddress | null>(null);
   const getAddressFromCoords = async (latitude: number, longitude: number) => {
     try {
@@ -161,7 +163,7 @@ const CameraScreen = () => {
     formData.append("timestamp", Date.now().toString());
 
     formData.append("address", address?.formattedAddress || "k");
-
+    formData.append("description", description || "");
     try {
       // Use your device's IP address instead of localhost
       setLoading(true);
@@ -303,6 +305,24 @@ const CameraScreen = () => {
                 }}
               />
             </View>
+            {photoType == "Duty" && (
+              <View style={{ width: "100%" }}>
+                <TextInput
+                  style={{
+                    height: 40,
+                    margin: 12,
+                    borderWidth: 1,
+                    padding: 10,
+                    borderRadius: 5,
+                    borderColor: "gainsboro",
+                  }}
+                  placeholder="Description"
+                  onChangeText={(text) => setDescription(text)}
+                  value={description}
+                />
+              </View>
+            )}
+
             <View style={{ flexDirection: "row", gap: 10 }}>
               <View style={[styles.saveButton, { flex: 1 }]}>
                 {!loading && (

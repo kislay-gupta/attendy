@@ -34,6 +34,9 @@ const photoSchema = new Schema(
       ref: "User",
       required: true,
     },
+    description: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
