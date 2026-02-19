@@ -16,6 +16,14 @@ import useLoader from "@/hooks/use-loader";
 import Loader from "@/components/shared/Loader";
 import { Calendar } from "@/components/ui/calendar";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // Update the User interface to match the response
 interface Organization {
@@ -47,6 +55,13 @@ const Page = () => {
   const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [mapLocation, setMapLocation] = useState<{
+    latitude: number;
+    longitude: number;
+    name?: string;
+    address?: string;
+    timestamp?: string;
+  } | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const { isLoading, startLoading, stopLoading } = useLoader();
@@ -81,6 +96,23 @@ const Page = () => {
         .includes(searchQuery.toLowerCase()) ||
       record.user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const getMapEmbedUrl = (latitude: number, longitude: number) => {
+    const delta = 0.005;
+    const left = longitude - delta;
+    const right = longitude + delta;
+    const bottom = latitude - delta;
+    const top = latitude + delta;
+    const params = new URLSearchParams({
+      bbox: `${left},${bottom},${right},${top}`,
+      layer: "mapnik",
+      marker: `${latitude},${longitude}`,
+    });
+    return `https://www.openstreetmap.org/export/embed.html?${params.toString()}`;
+  };
+
+  const getMapLinkUrl = (latitude: number, longitude: number) =>
+    `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=17/${latitude}/${longitude}`;
   return (
     <div className="p-8 grid grid-cols-12 gap-2">
       <div className="w-max col-span-3">
@@ -135,12 +167,33 @@ const Page = () => {
                         : "N/A"}
                     </TableCell>
                     <TableCell>
-                      {record.latitude && record.longitude
-                        ? `${record.latitude}, ${record.longitude}`
-                        : "N/A"}
+                      {record.address ? `${record.address}` : "N/A"}
                     </TableCell>
                     <TableCell>
-                      {record.address ? `${record.address}` : "N/A"}
+                      {record.latitude && record.longitude ? (
+                        <div className="flex flex-col gap-2">
+                          <span>
+                            {record.latitude}, {record.longitude}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              setMapLocation({
+                                latitude: record.latitude,
+                                longitude: record.longitude,
+                                name: record.user?.fullName,
+                                address: record.address,
+                                timestamp: record.timestamp,
+                              })
+                            }
+                          >
+                            View map
+                          </Button>
+                        </div>
+                      ) : (
+                        "N/A"
+                      )}
                     </TableCell>
                     <TableCell>
                       {record.img ? (
@@ -208,6 +261,57 @@ const Page = () => {
           </div>
         </div>
       )}
+      <Dialog
+        open={!!mapLocation}
+        onOpenChange={(open) => {
+          if (!open) {
+            setMapLocation(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Geolocation</DialogTitle>
+            <DialogDescription>
+              {mapLocation?.name ? `${mapLocation.name} · ` : ""}
+              {mapLocation?.address || "Location preview"}
+            </DialogDescription>
+          </DialogHeader>
+          {mapLocation ? (
+            <div className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                Coordinates: {mapLocation.latitude}, {mapLocation.longitude}
+                {mapLocation.timestamp
+                  ? ` · ${format(new Date(mapLocation.timestamp), "PPpp")}`
+                  : ""}
+              </div>
+              <iframe
+                title="Geolocation map"
+                src={getMapEmbedUrl(
+                  mapLocation.latitude,
+                  mapLocation.longitude
+                )}
+                className="h-[420px] w-full rounded-md border"
+                loading="lazy"
+              />
+              <div className="flex justify-end">
+                <Button asChild variant="outline">
+                  <a
+                    href={getMapLinkUrl(
+                      mapLocation.latitude,
+                      mapLocation.longitude
+                    )}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open in OpenStreetMap
+                  </a>
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
