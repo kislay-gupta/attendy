@@ -22,6 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import MapPicker from "@/components/shared/MapPicker";
 
 // Define the form schema with zod
 const formSchema = z.object({
@@ -33,6 +34,20 @@ const formSchema = z.object({
   eveningAttendanceStartTime: z.string(),
   privilegeLeave: z.number().min(0, "Must be a positive number"),
   otherLeave: z.number().min(0, "Must be a positive number"),
+  locationLatitude: z.preprocess(
+    (value) => Number(value),
+    z
+      .number({ required_error: "Location latitude is required" })
+      .min(-90, "Latitude must be between -90 and 90")
+      .max(90, "Latitude must be between -90 and 90")
+  ),
+  locationLongitude: z.preprocess(
+    (value) => Number(value),
+    z
+      .number({ required_error: "Location longitude is required" })
+      .min(-180, "Longitude must be between -180 and 180")
+      .max(180, "Longitude must be between -180 and 180")
+  ),
 });
 
 // Derive TypeScript type from the zod schema
@@ -69,6 +84,8 @@ const RegisterNGO = () => {
       eveningAttendanceStartTime: "17:00",
       privilegeLeave: 0,
       otherLeave: 0,
+      locationLatitude: 20.5937,
+      locationLongitude: 78.9629,
     },
   });
 
@@ -126,6 +143,14 @@ const RegisterNGO = () => {
       );
       formDataToSend.append("privilegeLeave", values.privilegeLeave.toString());
       formDataToSend.append("otherLeave", values.otherLeave.toString());
+      formDataToSend.append(
+        "locationLatitude",
+        values.locationLatitude.toString()
+      );
+      formDataToSend.append(
+        "locationLongitude",
+        values.locationLongitude.toString()
+      );
       const response = await axios.post(
         `${BASE_URL}/api/v1/org`,
         formDataToSend,
@@ -328,6 +353,58 @@ const RegisterNGO = () => {
                         </FormItem>
                       )}
                     />
+                    <div className="space-y-3">
+                      <div>
+                        <FormLabel>Organization Location</FormLabel>
+                        <p className="text-sm text-gray-500">
+                          Click on the map to set the organization location.
+                        </p>
+                      </div>
+                      <MapPicker
+                        value={{
+                          latitude: form.watch("locationLatitude"),
+                          longitude: form.watch("locationLongitude"),
+                        }}
+                        onChange={(value) => {
+                          form.setValue("locationLatitude", value.latitude, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          });
+                          form.setValue("locationLongitude", value.longitude, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          });
+                        }}
+                      />
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <FormField
+                          control={form.control}
+                          name="locationLatitude"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Latitude</FormLabel>
+                              <FormControl>
+                                <Input type="number" step="any" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="locationLongitude"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Longitude</FormLabel>
+                              <FormControl>
+                                <Input type="number" step="any" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
                   </motion.div>
                 )}
 

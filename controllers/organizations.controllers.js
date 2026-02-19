@@ -4,6 +4,9 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 
 const registerOrganization = asyncHandler(async (req, res) => {
+  if (req.user?.role !== "ADMIN") {
+    throw new ApiError(403, "Only admins can create organizations");
+  }
   const {
     name,
     description,
@@ -13,6 +16,8 @@ const registerOrganization = asyncHandler(async (req, res) => {
     morningAttendanceDeadline,
     eveningAttendanceStartTime,
     holidays,
+    locationLatitude,
+    locationLongitude,
   } = req.body;
   const logo = req.file?.path;
 
@@ -22,6 +27,14 @@ const registerOrganization = asyncHandler(async (req, res) => {
       .status(400)
       .json(new ApiResponse(400, null, "All required fields must be provided"));
     throw new ApiError(400, "All required fields must be provided");
+  }
+  const latitude = Number(locationLatitude);
+  const longitude = Number(locationLongitude);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    res
+      .status(400)
+      .json(new ApiResponse(400, null, "Organization location is required"));
+    throw new ApiError(400, "Organization location is required");
   }
 
   // Ensure workingDays is an array
@@ -45,6 +58,10 @@ const registerOrganization = asyncHandler(async (req, res) => {
     name,
     description,
     logo,
+    location: {
+      latitude,
+      longitude,
+    },
     leaves: {
       privilegeLeave,
       otherLeave,
@@ -64,6 +81,9 @@ const registerOrganization = asyncHandler(async (req, res) => {
 
 const getOrganization = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  if (req.user?.role !== "ADMIN" && `${req.user?.organization}` !== id) {
+    throw new ApiError(403, "Access denied");
+  }
 
   const organization = await Organization.findById(id)
     .populate("users")
@@ -83,6 +103,9 @@ const getOrganization = asyncHandler(async (req, res) => {
 const updateOrganization = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const updateData = req.body;
+  if (req.user?.role !== "ADMIN" && `${req.user?.organization}` !== id) {
+    throw new ApiError(403, "Access denied");
+  }
 
   const organization = await Organization.findByIdAndUpdate(
     id,
@@ -103,6 +126,9 @@ const updateOrganization = asyncHandler(async (req, res) => {
 
 const deleteOrganization = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  if (req.user?.role !== "ADMIN") {
+    throw new ApiError(403, "Only admins can delete organizations");
+  }
 
   const organization = await Organization.findByIdAndDelete(id);
   if (!organization) {
@@ -115,7 +141,10 @@ const deleteOrganization = asyncHandler(async (req, res) => {
 });
 
 const getAllOrganizations = asyncHandler(async (req, res) => {
-  const organizations = await Organization.find();
+  const organizations =
+    req.user?.role === "ADMIN"
+      ? await Organization.find()
+      : await Organization.find({ _id: req.user?.organization });
 
   return res
     .status(200)

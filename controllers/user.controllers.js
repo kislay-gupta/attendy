@@ -33,6 +33,8 @@ const registerUser = asyncHandler(async (req, res) => {
     deviceManufacture,
     designation,
     organization,
+    locationLatitude,
+    locationLongitude,
   } = req.body;
   if (
     [
@@ -47,6 +49,11 @@ const registerUser = asyncHandler(async (req, res) => {
     ].some((field) => field?.trim() === "")
   ) {
     throw new ApiError(400, "All fields are required");
+  }
+  const latitude = Number(locationLatitude);
+  const longitude = Number(locationLongitude);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    throw new ApiError(400, "User location is required");
   }
   const existedUser = await User.findOne({
     $or: [{ email }, { mobileNo }],
@@ -63,7 +70,7 @@ const registerUser = asyncHandler(async (req, res) => {
   if (!avatar) {
     throw new ApiError(400, "Avatar file is required");
   }
-  const org = Organization.findById(organization);
+  const org = await Organization.findById(organization);
   if (!org) {
     throw new ApiError(404, "NGO Not found");
   }
@@ -81,6 +88,10 @@ const registerUser = asyncHandler(async (req, res) => {
       deviceInfo: {
         deviceModel,
         deviceManufacture,
+      },
+      location: {
+        latitude,
+        longitude,
       },
     });
     const createdUser = await User.findById(user._id)
@@ -127,13 +138,24 @@ const getCurrentUserById = asyncHandler(async (req, res) => {
   const user = await User.findById(userId)
     .select("-password -refreshToken")
     .populate("organization", "_id name");
+  if (
+    user &&
+    req.user?.role !== "ADMIN" &&
+    `${user.organization?._id}` !== `${req.user?.organization}`
+  ) {
+    throw new ApiError(403, "Access denied");
+  }
   return res
     .status(200)
     .json(new ApiResponse(200, user, "Current user details"));
 });
 
 const getAllUser = asyncHandler(async (req, res) => {
-  const user = await User.find({ role: "USER" })
+  const filter =
+    req.user?.role === "ADMIN" && req.query.organizationId
+      ? { role: "USER", organization: req.query.organizationId }
+      : { role: "USER", organization: req.user?.organization };
+  const user = await User.find(filter)
     .select("-password -refreshToken")
     .populate("organization");
   return res.status(200).json(new ApiResponse(200, user, " all user details"));
@@ -188,7 +210,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     req.user._id,
     {
       $set: {
-        accessToken: undefined,
+        refreshToken: undefined,
       },
     },
     {
@@ -228,16 +250,16 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
     };
-    const { accessToken, newRefreshToken } =
+    const { accessToken, refreshToken } =
       await generateAccessAndRefreshToken(user._id);
     return res
       .status(200)
       .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", newRefreshToken, options)
+      .cookie("refreshToken", refreshToken, options)
       .json(
         new ApiResponse(
           200,
-          { accessToken, refreshToken: newRefreshToken },
+          { accessToken, refreshToken },
           "Access token refreshed"
         )
       );
@@ -249,7 +271,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const changeCurrentPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
   const user = await User.findById(req.user?._id);
-  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+  const isPasswordCorrect = await user.matchPassword(oldPassword);
   if (!isPasswordCorrect) {
     throw new ApiError(400, "Invalid old password");
   }
@@ -301,7 +323,7 @@ const verifySession = asyncHandler(async (req, res) => {
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     return res.json({ authenticated: true, user: decoded });
   } catch (error) {
-    return res.status(402).json({ authenticated: false });
+    return res.status(401).json({ authenticated: false });
   }
 });
 

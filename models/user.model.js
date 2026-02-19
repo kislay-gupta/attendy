@@ -51,6 +51,16 @@ const userSchema = new Schema(
       },
       required: true,
     },
+    location: {
+      latitude: {
+        type: Number,
+        required: true,
+      },
+      longitude: {
+        type: Number,
+        required: true,
+      },
+    },
     isVerified: {
       type: Boolean,
       default: false,
