@@ -13,6 +13,8 @@ const registerOrganization = asyncHandler(async (req, res) => {
     morningAttendanceDeadline,
     eveningAttendanceStartTime,
     holidays,
+    locationLatitude,
+    locationLongitude,
   } = req.body;
   const logo = req.file?.path;
 
@@ -22,6 +24,14 @@ const registerOrganization = asyncHandler(async (req, res) => {
       .status(400)
       .json(new ApiResponse(400, null, "All required fields must be provided"));
     throw new ApiError(400, "All required fields must be provided");
+  }
+  const latitude = Number(locationLatitude);
+  const longitude = Number(locationLongitude);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    res
+      .status(400)
+      .json(new ApiResponse(400, null, "Organization location is required"));
+    throw new ApiError(400, "Organization location is required");
   }
 
   // Ensure workingDays is an array
@@ -45,6 +55,10 @@ const registerOrganization = asyncHandler(async (req, res) => {
     name,
     description,
     logo,
+    location: {
+      latitude,
+      longitude,
+    },
     leaves: {
       privilegeLeave,
       otherLeave,

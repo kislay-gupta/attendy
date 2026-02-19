@@ -33,6 +33,8 @@ const registerUser = asyncHandler(async (req, res) => {
     deviceManufacture,
     designation,
     organization,
+    locationLatitude,
+    locationLongitude,
   } = req.body;
   if (
     [
@@ -47,6 +49,11 @@ const registerUser = asyncHandler(async (req, res) => {
     ].some((field) => field?.trim() === "")
   ) {
     throw new ApiError(400, "All fields are required");
+  }
+  const latitude = Number(locationLatitude);
+  const longitude = Number(locationLongitude);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    throw new ApiError(400, "User location is required");
   }
   const existedUser = await User.findOne({
     $or: [{ email }, { mobileNo }],
@@ -81,6 +88,10 @@ const registerUser = asyncHandler(async (req, res) => {
       deviceInfo: {
         deviceModel,
         deviceManufacture,
+      },
+      location: {
+        latitude,
+        longitude,
       },
     });
     const createdUser = await User.findById(user._id)

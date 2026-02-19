@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/form";
 import { motion, AnimatePresence } from "framer-motion";
 import { handleAxiosError } from "@/utils/handle-error";
+import MapPicker from "@/components/shared/MapPicker";
 
 interface NGODATA {
   _id: string;
@@ -44,6 +45,20 @@ const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   avatar: z.any().optional(),
+  locationLatitude: z.preprocess(
+    (value) => Number(value),
+    z
+      .number({ required_error: "Location latitude is required" })
+      .min(-90, "Latitude must be between -90 and 90")
+      .max(90, "Latitude must be between -90 and 90")
+  ),
+  locationLongitude: z.preprocess(
+    (value) => Number(value),
+    z
+      .number({ required_error: "Location longitude is required" })
+      .min(-180, "Longitude must be between -180 and 180")
+      .max(180, "Longitude must be between -180 and 180")
+  ),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -66,6 +81,8 @@ const RegisterUser = () => {
       email: "",
       password: "",
       avatar: null,
+      locationLatitude: 20.5937,
+      locationLongitude: 78.9629,
     },
   });
 
@@ -121,6 +138,14 @@ const RegisterUser = () => {
 
       formDataToSend.append("deviceModel", "modal");
       formDataToSend.append("deviceManufacture", "device");
+      formDataToSend.append(
+        "locationLatitude",
+        values.locationLatitude.toString()
+      );
+      formDataToSend.append(
+        "locationLongitude",
+        values.locationLongitude.toString()
+      );
 
       const response = await axios.post(
         `${BASE_URL}/api/v1/user/register`,
@@ -427,6 +452,58 @@ const RegisterUser = () => {
                         </FormItem>
                       )}
                     />
+                    <div className="space-y-3">
+                      <div>
+                        <FormLabel>User Location</FormLabel>
+                        <p className="text-sm text-gray-500">
+                          Click on the map to set the user's base location.
+                        </p>
+                      </div>
+                      <MapPicker
+                        value={{
+                          latitude: form.watch("locationLatitude"),
+                          longitude: form.watch("locationLongitude"),
+                        }}
+                        onChange={(value) => {
+                          form.setValue("locationLatitude", value.latitude, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          });
+                          form.setValue("locationLongitude", value.longitude, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          });
+                        }}
+                      />
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <FormField
+                          control={form.control}
+                          name="locationLatitude"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Latitude</FormLabel>
+                              <FormControl>
+                                <Input type="number" step="any" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="locationLongitude"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Longitude</FormLabel>
+                              <FormControl>
+                                <Input type="number" step="any" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
