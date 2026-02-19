@@ -11,10 +11,12 @@ const uploadPhoto = asyncHandler(async (req, res) => {
   // Convert Unix timestamp to Date object
   const photoDate = new Date(Number(timestamp));
 
-  if (!latitude || !longitude || !photoType) {
-    throw new ApiError(400, "Latitude, longitude and photoType are required");
+  if (!latitude || !longitude || !photoType || !address) {
+    throw new ApiError(
+      400,
+      "Latitude, longitude, address, and photoType are required"
+    );
   }
-  console.log(address);
   if (!["Punch In", "Punch Out", "Duty"].includes(photoType)) {
     throw new ApiError(400, "Invalid photo type");
   }
