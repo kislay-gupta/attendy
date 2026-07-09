@@ -5,6 +5,19 @@ import { Photo } from "../models/photo.model.js";
 import { Attendance } from "../models/attendance.model.js";
 import { User } from "../models/user.model.js";
 import mongoose from "mongoose";
+
+const getScopedUserIds = async (req) => {
+  if (req.user?.role === "ADMIN") {
+    if (req.query.organizationId) {
+      const users = await User.find({
+        organization: req.query.organizationId,
+      }).select("_id");
+      return users.map((user) => user._id);
+    }
+    return null;
+  }
+  return [req.user?._id];
+};
 const uploadPhoto = asyncHandler(async (req, res) => {
   const { latitude, longitude, photoType, timestamp, address } = req.body;
 
@@ -90,7 +103,9 @@ const uploadPhoto = asyncHandler(async (req, res) => {
   }
 });
 const getAllPhotos = asyncHandler(async (req, res) => {
-  const photos = await Photo.find({})
+  const scopedUserIds = await getScopedUserIds(req);
+  const filter = scopedUserIds ? { user: { $in: scopedUserIds } } : {};
+  const photos = await Photo.find(filter)
     .sort({ timestamp: -1 })
     .populate("user", "fullName email organization");
 
@@ -135,6 +150,9 @@ const getPhotosByType = asyncHandler(async (req, res) => {
 
   if (!userId || !startDate) {
     throw new ApiError(400, "User ID and start date are required");
+  }
+  if (req.user?.role !== "ADMIN" && `${req.user?._id}` !== `${userId}`) {
+    throw new ApiError(403, "Access denied");
   }
   const queryDate = new Date(startDate);
   // Set end of day time (23:59:59.999)
@@ -212,12 +230,14 @@ const getPhotosByDateRange = asyncHandler(async (req, res) => {
 
   const endDate = new Date(queryDate);
   endDate.setHours(23, 59, 59, 999);
+  const scopedUserIds = await getScopedUserIds(req);
   const photos = await Photo.find({
     photoType,
     timestamp: {
       $gte: queryDate,
       $lte: endDate,
     },
+    ...(scopedUserIds ? { user: { $in: scopedUserIds } } : {}),
   })
     .sort({ timestamp: -1 })
     .populate({

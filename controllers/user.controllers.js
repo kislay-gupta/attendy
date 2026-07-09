@@ -138,13 +138,24 @@ const getCurrentUserById = asyncHandler(async (req, res) => {
   const user = await User.findById(userId)
     .select("-password -refreshToken")
     .populate("organization", "_id name");
+  if (
+    user &&
+    req.user?.role !== "ADMIN" &&
+    `${user.organization?._id}` !== `${req.user?.organization}`
+  ) {
+    throw new ApiError(403, "Access denied");
+  }
   return res
     .status(200)
     .json(new ApiResponse(200, user, "Current user details"));
 });
 
 const getAllUser = asyncHandler(async (req, res) => {
-  const user = await User.find({ role: "USER" })
+  const filter =
+    req.user?.role === "ADMIN" && req.query.organizationId
+      ? { role: "USER", organization: req.query.organizationId }
+      : { role: "USER", organization: req.user?.organization };
+  const user = await User.find(filter)
     .select("-password -refreshToken")
     .populate("organization");
   return res.status(200).json(new ApiResponse(200, user, " all user details"));
