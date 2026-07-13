@@ -28,10 +28,6 @@ const organizationSchema = new Schema(
       },
     },
 
-    users: {
-      type: [Schema.Types.ObjectId],
-      ref: "User",
-    },
     morningAttendanceDeadline: {
       type: String,
       default: "09:30",

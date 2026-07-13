@@ -13,6 +13,9 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  Briefcase,
+  ClipboardList,
+  MapPin,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -39,6 +42,9 @@ const navigation = [
   },
   { name: "Duty Pic", href: "/admin/duty-pic", icon: Users },
   { name: "Attendance", href: "/admin/attendance", icon: Calendar },
+  { name: "Leaves", href: "/admin/leaves", icon: Briefcase },
+  { name: "Tasks", href: "/admin/tasks", icon: ClipboardList },
+  { name: "Live Tracking", href: "/admin/tracking", icon: MapPin },
 ];
 
 interface SidebarProps {

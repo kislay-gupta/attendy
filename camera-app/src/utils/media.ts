@@ -9,6 +9,6 @@ export const getMediaType = (uri: string) => {
   return videoExtensions.includes(path.extname(uri))
     ? "video"
     : imageExtensions.includes(path.extname(uri))
-    ? "image"
-    : null;
+      ? "image"
+      : null;
 };

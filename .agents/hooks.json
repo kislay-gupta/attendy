@@ -1,0 +1,11 @@
+{
+  "prettier-format": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "/home/kislay/Documents/Github/attendy/.agents/hooks/prettier.sh",
+        "timeout": 15
+      }
+    ]
+  }
+}

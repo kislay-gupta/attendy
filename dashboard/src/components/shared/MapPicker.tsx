@@ -16,45 +16,21 @@ type MapPickerProps = {
 
 type LeafletMarker = {
   setLatLng: (latlng: { lat: number; lng: number }) => void;
-  on: (event: string, handler: (event: { target: LeafletMarker }) => void) => void;
+  on: (
+    event: string,
+    handler: (event: { target: LeafletMarker }) => void
+  ) => void;
   getLatLng: () => { lat: number; lng: number };
 };
 
 type LeafletMap = {
   setView: (center: [number, number], zoom: number) => void;
-  on: (event: string, handler: (event: { latlng: { lat: number; lng: number } }) => void) => void;
+  on: (
+    event: string,
+    handler: (event: { latlng: { lat: number; lng: number } }) => void
+  ) => void;
   remove: () => void;
 };
-
-declare global {
-  interface Window {
-    L?: {
-      map: (element: HTMLElement, options?: { zoomControl?: boolean }) => LeafletMap;
-      tileLayer: (url: string, options: { attribution: string }) => {
-        addTo: (map: LeafletMap) => void;
-      };
-      marker: (latlng: [number, number], options?: { draggable?: boolean }) => {
-        addTo: (map: LeafletMap) => LeafletMarker;
-      };
-      icon: (options: {
-        iconUrl: string;
-        iconRetinaUrl: string;
-        shadowUrl: string;
-        iconSize: [number, number];
-        iconAnchor: [number, number];
-        popupAnchor: [number, number];
-        shadowSize: [number, number];
-      }) => unknown;
-      Marker: {
-        prototype: {
-          options: {
-            icon?: unknown;
-          };
-        };
-      };
-    };
-  }
-}
 
 const defaultCenter: MapValue = {
   latitude: 20.5937,
@@ -78,16 +54,17 @@ const MapPicker = ({ value, onChange, height = "320px" }: MapPickerProps) => {
   }, [value]);
 
   useEffect(() => {
-    if (!isLeafletReady || !mapContainerRef.current || !window.L) {
+    if (!isLeafletReady || !mapContainerRef.current || !(window as any).L) {
       return;
     }
 
-    const L = window.L;
+    const L = (window as any).L;
     const markerIcon = L.icon({
       iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
       iconRetinaUrl:
         "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      shadowUrl:
+        "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
       iconSize: [25, 41],
       iconAnchor: [12, 41],
       popupAnchor: [1, -34],
@@ -106,22 +83,21 @@ const MapPicker = ({ value, onChange, height = "320px" }: MapPickerProps) => {
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(mapRef.current);
 
-      mapRef.current.on("click", (event) => {
+      mapRef.current!.on("click", (event) => {
         const latlng = event.latlng;
         onChange({ latitude: latlng.lat, longitude: latlng.lng });
       });
     }
 
-    mapRef.current.setView(center, value ? 15 : 5);
+    mapRef.current!.setView(center, value ? 15 : 5);
 
     if (value) {
       if (!markerRef.current) {
-        markerRef.current = L.marker(
-          [value.latitude, value.longitude],
-          { draggable: true }
-        ).addTo(mapRef.current);
+        markerRef.current = L.marker([value.latitude, value.longitude], {
+          draggable: true,
+        }).addTo(mapRef.current!);
 
-        markerRef.current.on("dragend", (event) => {
+        markerRef.current!.on("dragend", (event) => {
           const position = event.target.getLatLng();
           onChange({ latitude: position.lat, longitude: position.lng });
         });

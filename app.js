@@ -74,8 +74,16 @@ import photoRoutes from "./routes/photos.routes.js";
 import userRoutes from "./routes/users.routes.js";
 import orgRoutes from "./routes/organizations.routes.js";
 import attendanceRoutes from "./routes/attendance.routes.js";
+import leaveRoutes from "./routes/leaves.routes.js";
+import taskRoutes from "./routes/tasks.routes.js";
+import locationLogRoutes from "./routes/locationLogs.routes.js";
+
 app.use("/api/v1/upload", photoRoutes);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/org", orgRoutes);
 app.use("/api/v1/attendance", attendanceRoutes);
+app.use("/api/v1/leaves", leaveRoutes);
+app.use("/api/v1/tasks", taskRoutes);
+app.use("/api/v1/location-logs", locationLogRoutes);
+
 export { app };

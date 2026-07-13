@@ -1,4 +1,5 @@
-import { Organization } from "../models/ngo.model.js";
+import { Organization } from "../models/organization.model.js";
+import { User } from "../models/user.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -85,18 +86,22 @@ const getOrganization = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Access denied");
   }
 
-  const organization = await Organization.findById(id)
-    .populate("users")
-    .select("-refreshToken -password");
+  const organization = await Organization.findById(id);
   if (!organization) {
     res.status(404).json(new ApiResponse(404, null, "Organization not found"));
     throw new ApiError(404, "Organization not found");
   }
 
+  const users = await User.find({ organization: id }).select(
+    "-refreshToken -password"
+  );
+  const organizationObj = organization.toObject();
+  organizationObj.users = users;
+
   return res
     .status(200)
     .json(
-      new ApiResponse(200, organization, "Organization fetched successfully")
+      new ApiResponse(200, organizationObj, "Organization fetched successfully")
     );
 });
 
@@ -141,10 +146,26 @@ const deleteOrganization = asyncHandler(async (req, res) => {
 });
 
 const getAllOrganizations = asyncHandler(async (req, res) => {
-  const organizations =
-    req.user?.role === "ADMIN"
-      ? await Organization.find()
-      : await Organization.find({ _id: req.user?.organization });
+  const filter =
+    req.user?.role === "ADMIN" ? {} : { _id: req.user?.organization };
+
+  const organizations = await Organization.aggregate([
+    { $match: filter },
+    {
+      $lookup: {
+        from: "users",
+        localField: "_id",
+        foreignField: "organization",
+        as: "users",
+      },
+    },
+    {
+      $project: {
+        "users.password": 0,
+        "users.refreshToken": 0,
+      },
+    },
+  ]);
 
   return res
     .status(200)
@@ -159,22 +180,33 @@ const addUserToOrganization = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
     res.status(400).json(new ApiResponse(400, null, "All fields are required"));
   }
-  const organization = await Organization.findByIdAndUpdate(
-    organizationId,
-    { $addToSet: { users: userId } },
-    { new: true }
-  );
-
+  const organization = await Organization.findById(organizationId);
   if (!organization) {
     throw new ApiError(404, "Organization not found");
   }
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { $set: { organization: organizationId } },
+    { new: true }
+  );
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const users = await User.find({ organization: organizationId }).select(
+    "-password -refreshToken"
+  );
+  const organizationObj = organization.toObject();
+  organizationObj.users = users;
 
   return res
     .status(200)
     .json(
       new ApiResponse(
         200,
-        organization,
+        organizationObj,
         "User added to organization successfully"
       )
     );

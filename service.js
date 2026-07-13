@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import { Organization } from "./models/ngo.model.js";
+import { Organization } from "./models/organization.model.js";
 import { Attendance } from "./models/attendance.model.js"; // Missing import
 import { User } from "./models/user.model.js";
 

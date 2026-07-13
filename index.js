@@ -4,7 +4,7 @@ import { app } from "./app.js";
 import connectDB from "./db/index.js";
 import { task } from "./service.js";
 dotenv.config({
-  path: "./env",
+  path: "./.env",
 });
 const PORT = process.env.PORT || 5000;
 connectDB()

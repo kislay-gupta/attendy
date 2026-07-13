@@ -41,6 +41,8 @@ const photoSchema = new Schema(
   { timestamps: true }
 );
 
+photoSchema.index({ user: 1, timestamp: -1 });
+
 photoSchema.plugin(mongooseAggregatePaginate);
 
 export const Photo = mongoose.model("Photo", photoSchema);

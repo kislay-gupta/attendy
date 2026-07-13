@@ -80,9 +80,27 @@ export default function RootLayout() {
           <Tabs.Screen
             name="location"
             options={{
-              title: "location",
+              title: "Tracking",
               tabBarIcon: ({ color, size }) => (
                 <Ionicons name="map-outline" size={size} color={color} />
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="tasks"
+            options={{
+              title: "Tasks",
+              tabBarIcon: ({ color, size }) => (
+                <Ionicons name="clipboard-outline" size={size} color={color} />
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="leaves"
+            options={{
+              title: "Leaves",
+              tabBarIcon: ({ color, size }) => (
+                <Ionicons name="calendar-outline" size={size} color={color} />
               ),
             }}
           />

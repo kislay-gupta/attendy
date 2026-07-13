@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
-import { Organization } from "../models/ngo.model.js";
+import { Organization } from "../models/organization.model.js";
 import jwt from "jsonwebtoken";
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -72,7 +72,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
   const org = await Organization.findById(organization);
   if (!org) {
-    throw new ApiError(404, "NGO Not found");
+    throw new ApiError(404, "Organization not found");
   }
   const createdUserName = fullName.slice(0, 2) + mobileNo.slice(8, 10);
   try {
@@ -102,14 +102,6 @@ const registerUser = asyncHandler(async (req, res) => {
         500,
         "Something went wrong while registering the user"
       );
-    }
-    const org = await Organization.findByIdAndUpdate(
-      organization,
-      { $addToSet: { users: user._id } },
-      { new: true }
-    );
-    if (!org) {
-      throw new ApiError(404, "NGO Not found");
     }
 
     return res
@@ -250,8 +242,9 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
     };
-    const { accessToken, refreshToken } =
-      await generateAccessAndRefreshToken(user._id);
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+      user._id
+    );
     return res
       .status(200)
       .cookie("accessToken", accessToken, options)

@@ -24,6 +24,10 @@ This attendance management system is composed of:
 - 📊 Attendance reporting and analytics
 - 📱 Mobile check-in/out for employees
 - 🖥️ Admin dashboard for organizational oversight
+- 📝 Leave Management System – Leave application, approval workflows, and balance tracking
+- 📋 Task / Visit Board – Assign target tasks to field agents with geofenced check-in/out and photo verification
+- 🛰️ Geolocation Tracking & Path Playback – Record background breadcrumbs and replay agent paths on dashboard map
+- 💾 Offline-first Sync – Cache task updates and tracking coordinates locally in AsyncStorage when network is offline and sync seamlessly when online
 
 ---
 
@@ -142,31 +146,51 @@ npx expo start
 
 ### 🔐 Authentication
 
-- `POST /api/v1/user/register` – Register a new user  
-- `POST /api/v1/user/login` – Login user  
+- `POST /api/v1/user/register` – Register a new user
+- `POST /api/v1/user/login` – Login user
 - `POST /api/v1/user/logout` – Logout user
 
 ### 👤 Users
 
-- `GET /api/v1/user` – Get current user  
-- `GET /api/v1/user/:userId` – Get user by ID  
+- `GET /api/v1/user` – Get current user
+- `GET /api/v1/user/:userId` – Get user by ID
 - `GET /api/v1/user/all` – Get all users
 
 ### 🏢 Organizations
 
-- `POST /api/v1/org` – Create organization  
-- `GET /api/v1/org` – Get all organizations  
-- `GET /api/v1/org/:id` – Get organization by ID  
-- `PATCH /api/v1/org/:id` – Update organization  
-- `DELETE /api/v1/org/:id` – Delete organization  
+- `POST /api/v1/org` – Create organization
+- `GET /api/v1/org` – Get all organizations
+- `GET /api/v1/org/:id` – Get organization by ID
+- `PATCH /api/v1/org/:id` – Update organization
+- `DELETE /api/v1/org/:id` – Delete organization
 - `POST /api/v1/org/add-employee` – Add user to organization
 
 ### 🕒 Attendance
 
-- `POST /api/v1/upload` – Upload attendance photo  
-- `GET /api/v1/upload` – Get user photos  
-- `GET /api/v1/upload/type` – Get photos by type  
+- `POST /api/v1/upload` – Upload attendance photo
+- `GET /api/v1/upload` – Get user photos
+- `GET /api/v1/upload/type` – Get photos by type
 - `GET /api/v1/upload/date-range` – Get photos by date range
+
+### 📝 Leave Management
+
+- `POST /api/v1/leaves` – Apply for leave (Employee)
+- `GET /api/v1/leaves` – List leaves (scoped: Employees get their own; Admins get organization-wide)
+- `GET /api/v1/leaves/balance` – Get remaining leave balances
+- `PATCH /api/v1/leaves/:id/status` – Approve/reject leave application (Admin)
+
+### 📋 Field Task Management
+
+- `POST /api/v1/tasks` – Create and assign a task (Admin)
+- `GET /api/v1/tasks` – List assigned tasks (scoped)
+- `PATCH /api/v1/tasks/:id/check-in` – Geofenced site check-in (with photo upload)
+- `PATCH /api/v1/tasks/:id/complete` – Complete task with notes (with photo upload)
+- `DELETE /api/v1/tasks/:id` – Delete task (Admin)
+
+### 🛰️ Live Geolocation Tracking
+
+- `POST /api/v1/location-logs` – Upload location breadcrumb logs (single/bulk array upload)
+- `GET /api/v1/location-logs/history` – Get historical path logs for user on a date (Admin)
 
 ---
 
@@ -178,19 +202,19 @@ npx expo start
 - [ ] Validate inputs for all API endpoints
 - [ ] Improve unit & integration test coverage
 - [ ] Enhance mobile app UI/UX
-- [ ] Add offline support to the mobile app
+- [x] Add offline support to the mobile app
 - [ ] Implement push notifications
 
 ### 🚀 Future Scope
 
-- 📈 **Advanced Analytics Dashboard** – Rich attendance insights with charts  
-- 🧠 **Facial Recognition** – Secure, AI-based attendance verification  
-- 🔄 **HR Integrations** – Sync with popular HR platforms  
-- 📝 **Leave Management** – Leave request/approval workflows  
-- 👥 **Team Management** – Manage departments and teams  
-- ⏱ **Shift Management** – Support for shift-based attendance  
-- 📧 **Automated Reports** – Email summaries to admins  
-- 🌍 **Multi-language Support** – Internationalization for global use  
+- 📈 **Advanced Analytics Dashboard** – Rich attendance insights with charts
+- 🧠 **Facial Recognition** – Secure, AI-based attendance verification
+- 🔄 **HR Integrations** – Sync with popular HR platforms
+- [x] **Leave Management** – Leave request/approval workflows
+- 👥 **Team Management** – Manage departments and teams
+- ⏱ **Shift Management** – Support for shift-based attendance
+- 📧 **Automated Reports** – Email summaries to admins
+- 🌍 **Multi-language Support** – Internationalization for global use
 - 📱 **PWA Support** – Convert dashboard into a Progressive Web App
 
 ---
